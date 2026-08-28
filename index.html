@@ -13,18 +13,13 @@
 </head>
 <body>
   <h1>Perchance Export Scrubber</h1>
-  <p>Select your <code>.json.gz</code> export file and choose what to do.</p>
+  <p>This tool safely removes <code>__savedImages</code> from your Perchance export.  
+     All other data remains unchanged and fully compatible with Perchance.</p>
 
   <div class="box">
     <label>
       <strong>Export file (.json.gz):</strong><br>
       <input type="file" id="fileInput" accept=".gz,.json">
-    </label>
-    <br><br>
-
-    <label>
-      <input type="checkbox" id="removeImages">
-      Remove images only (<code>__savedImages</code>)
     </label>
     <br><br>
 
@@ -43,4 +38,3 @@
   <script src="scrubber.js"></script>
 </body>
 </html>
-
