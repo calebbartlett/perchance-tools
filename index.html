@@ -2,52 +2,206 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Perchance Export Scrubber</title>
+  <title>Perchance Tools</title>
+
   <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    h1 { margin-bottom: 0.5rem; }
-    .box { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; }
-    input, button { margin-top: 0.5rem; }
-    pre { background: #f5f5f5; padding: 1rem; overflow: auto; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 900px;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+
+    /* Tabs */
+    #tabs {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab-button {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      border: 1px solid #ccc;
+      background: #eee;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: #ddd;
+      font-weight: bold;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Profile editor */
+    .profile-editor label {
+      display: block;
+      margin-top: 1rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      margin-top: 0.3rem;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Perchance Export Scrubber</h1>
 
-  <p>
-    This tool safely removes <code>__savedImages</code> and any
-    <code>&lt;image&gt;...&lt;/image&gt;</code> blocks from your Perchance export.
-    All other data remains unchanged and fully compatible with Perchance.
-  </p>
+  <h1>Perchance Tools</h1>
+  <p>Welcome to your Perchance utility suite. Select a tab to begin.</p>
 
-  <div class="box">
-    <label>
-      <strong>Export file (.json.gz):</strong><br>
-      <input type="file" id="fileInput" accept=".gz,.json">
-    </label>
-    <br><br>
-
-    <button id="processBtn">Process file</button>
+  <!-- ========================= -->
+  <!-- TABS -->
+  <!-- ========================= -->
+  <div id="tabs">
+    <button class="tab-button active" data-tab="profiles">Profiles</button>
+    <button class="tab-button" data-tab="world">World</button>
+    <button class="tab-button" data-tab="lore">Lore</button>
+    <button class="tab-button" data-tab="exportTools">Export Tools</button>
   </div>
 
-  <div class="box">
-    <h2>Output</h2>
-    <p id="status">No file processed yet.</p>
+  <div id="tab-content">
 
-    <div id="stats" style="margin-top:1rem; font-size:0.9rem;">
-      <strong>Stats:</strong>
-      <div>Original size: <span id="origSize">-</span></div>
-      <div>Cleaned size: <span id="cleanSize">-</span></div>
-      <div>Reduction: <span id="reduction">-</span></div>
-      <div>SavedImages Removed: <span id="savedImagesCount">-</span></div>
-      <div>Image Tags Removed: <span id="imageTagCount">-</span></div>
+    <!-- ========================= -->
+    <!-- PROFILES TAB (Landing Page) -->
+    <!-- ========================= -->
+    <div id="profiles" class="tab-panel active">
+      <h2>Character Profiles</h2>
+      <p>This section will allow you to extract, edit, and update characters from your Perchance export.</p>
+
+      <label>
+        <strong>Select Character:</strong><br>
+        <select id="characterSelect">
+          <option value="0">Character 1</option>
+        </select>
+      </label>
+
+      <div class="profile-editor">
+
+        <label>
+          <strong>Name</strong><br>
+          <input type="text" id="charName" placeholder="Character name">
+        </label>
+
+        <label>
+          <strong>Description</strong><br>
+          <textarea id="charDescription" rows="4" placeholder="Character description"></textarea>
+        </label>
+
+        <label>
+          <strong>Personality</strong><br>
+          <textarea id="charPersonality" rows="4" placeholder="Personality"></textarea>
+        </label>
+
+        <label>
+          <strong>Role Instructions</strong><br>
+          <textarea id="charRoleInstructions" rows="4" placeholder="Role instructions"></textarea>
+        </label>
+
+        <label>
+          <strong>Greeting</strong><br>
+          <textarea id="charGreeting" rows="3" placeholder="Greeting"></textarea>
+        </label>
+
+      </div>
     </div>
+
+    <!-- ========================= -->
+    <!-- WORLD TAB -->
+    <!-- ========================= -->
+    <div id="world" class="tab-panel">
+      <h2>World</h2>
+      <p>World editing will go here.</p>
+    </div>
+
+    <!-- ========================= -->
+    <!-- LORE TAB -->
+    <!-- ========================= -->
+    <div id="lore" class="tab-panel">
+      <h2>Lore</h2>
+      <p>Lorebook editing will go here.</p>
+    </div>
+
+    <!-- ========================= -->
+    <!-- EXPORT TOOLS TAB -->
+    <!-- ========================= -->
+    <div id="exportTools" class="tab-panel">
+      <h2>Export Tools</h2>
+      <p>Utilities for cleaning, inspecting, and preparing Perchance export files.</p>
+
+      <div class="box">
+        <h3>Perchance Export Scrubber</h3>
+
+        <label>Select .json.gz file:</label><br>
+        <input type="file" id="fileInput" accept=".gz,.json.gz"><br><br>
+
+        <button id="processBtn">Process File</button>
+
+        <p id="status"></p>
+      </div>
+
+      <div class="box">
+        <h3>Stats</h3>
+        <p><strong>Original size:</strong> <span id="origSize">-</span></p>
+        <p><strong>Cleaned size:</strong> <span id="cleanSize">-</span></p>
+        <p><strong>Reduction:</strong> <span id="reduction">-</span></p>
+        <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
+        <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
+      </div>
+    </div>
+
   </div>
 
-  <!-- gzip library -->
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <!-- ========================= -->
+  <!-- TAB SWITCHING JS -->
+  <!-- ========================= -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
 
-  <!-- scrubber logic -->
+          // Switch active tab button
+          document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Switch active panel
+          const tab = btn.dataset.tab;
+          document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+          });
+          document.getElementById(tab).classList.add('active');
+        });
+      });
+    });
+  </script>
+
+  <!-- ========================= -->
+  <!-- SCRUBBER SCRIPTS -->
+  <!-- ========================= -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
+
 </body>
 </html>
