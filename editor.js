@@ -1,30 +1,25 @@
 // ======================================================
-// Perchance Tools - Character Extraction Logic
+// Perchance Tools - Multi-Character Extraction Logic
 // ======================================================
 
-// Holds the parsed Perchance export JSON
 let perchanceData = null;
+let characters = [];
 
-// Listen for file uploads from the GLOBAL import toolbar
+// GLOBAL IMPORT LISTENER
 document.getElementById("fileInput").addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     try {
-        // Read file as ArrayBuffer
         const arrayBuffer = await file.arrayBuffer();
-
-        // Decompress gzip using pako
         const decompressed = pako.ungzip(arrayBuffer, { to: "string" });
-
-        // Parse JSON
         perchanceData = JSON.parse(decompressed);
 
-        // Update status
         document.getElementById("importStatus").textContent = "File loaded";
 
-        // Populate the Profiles tab
-        populateCharacterEditor();
+        extractCharacters();
+        populateCharacterDropdown();
+        loadCharacterIntoEditor(0);
 
     } catch (err) {
         console.error("Error loading export:", err);
@@ -34,24 +29,59 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
 
 // ======================================================
-// Populate Profiles Tab Fields
+// Extract characters from multi-character export
 // ======================================================
-function populateCharacterEditor() {
-    if (!perchanceData) {
-        console.warn("No export loaded yet.");
+function extractCharacters() {
+    const root = perchanceData?.data?.data?.[0];
+
+    if (!root || !root.characters) {
+        alert("This export does not contain a characters array.");
+        characters = [];
         return;
     }
 
-    const ai = perchanceData?.data?.data?.[0]?.aiSettings;
+    characters = root.characters.map(c => c.aiSettings || {});
+}
 
-    if (!ai) {
-        alert("Could not find aiSettings in export. Character extraction failed.");
-        return;
-    }
 
-    document.getElementById("charName").value = ai.name || "";
-    document.getElementById("charDescription").value = ai.description || "";
-    document.getElementById("charPersonality").value = ai.personality || "";
-    document.getElementById("charRoleInstructions").value = ai.roleInstructions || "";
-    document.getElementById("charGreeting").value = ai.greeting || "";
+// ======================================================
+// Populate dropdown with name + role preview
+// ======================================================
+function populateCharacterDropdown() {
+    const select = document.getElementById("characterSelect");
+    select.innerHTML = "";
+
+    characters.forEach((char, index) => {
+        const name = char.name || `Character ${index + 1}`;
+        const role = char.roleInstructions;
+
+        const label = role
+            ? `${name} (${role})`
+            : name;
+
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = label;
+
+        select.appendChild(option);
+    });
+
+    select.addEventListener("change", () => {
+        loadCharacterIntoEditor(select.value);
+    });
+}
+
+
+// ======================================================
+// Load selected character into editor fields
+// ======================================================
+function loadCharacterIntoEditor(index) {
+    const char = characters[index];
+    if (!char) return;
+
+    document.getElementById("charName").value = char.name || "";
+    document.getElementById("charDescription").value = char.description || "";
+    document.getElementById("charPersonality").value = char.personality || "";
+    document.getElementById("charRoleInstructions").value = char.roleInstructions || "";
+    document.getElementById("charGreeting").value = char.greeting || "";
 }
