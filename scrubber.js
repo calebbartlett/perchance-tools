@@ -1,27 +1,33 @@
 // ------------------------------------------------------------
-// Remove __savedImages only (always on, Perchance‑safe)
+// Remove __savedImages and <image>...</image> blocks (Perchance‑safe)
 // ------------------------------------------------------------
 
+function stripImageTags(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/<image>[\s\S]*?<\/image>/gi, "");
+}
+
 function removeBloat(obj) {
-  if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+  // Strings: remove <image>...</image>
+  if (typeof obj === "string") {
+    return stripImageTags(obj);
+  }
+
+  // Arrays: recurse (do NOT remove null/empty)
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeBloat(item));
+  }
+
+  // Objects: remove __savedImages and recurse
+  if (obj && typeof obj === "object") {
     const newObj = {};
     for (const [k, v] of Object.entries(obj)) {
       if (k === "__savedImages") {
         continue; // always remove images
       }
-      const cleaned = removeBloat(v);
-      if (cleaned !== undefined) newObj[k] = cleaned;
+      newObj[k] = removeBloat(v);
     }
     return newObj;
-  }
-
-  if (Array.isArray(obj)) {
-    const newArr = [];
-    for (const item of obj) {
-      const cleaned = removeBloat(item);
-      if (cleaned !== undefined) newArr.push(cleaned);
-    }
-    return newArr;
   }
 
   return obj;
@@ -36,6 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const processBtn = document.getElementById("processBtn");
   const statusEl = document.getElementById("status");
 
+  // Stats elements
+  const origSizeEl = document.getElementById("origSize");
+  const cleanSizeEl = document.getElementById("cleanSize");
+  const reductionEl = document.getElementById("reduction");
+
   processBtn.addEventListener("click", async () => {
     const file = fileInput.files[0];
     if (!file) {
@@ -49,7 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
 
-      // Try gzip first; fall back to plain JSON
+      // Original size (gzip size)
+      const origSize = uint8.length;
+
       let jsonText;
       try {
         jsonText = window.pako.ungzip(uint8, { to: "string" });
@@ -60,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statusEl.textContent = "Parsing JSON...";
       const data = JSON.parse(jsonText);
 
-      statusEl.textContent = "Removing __savedImages...";
+      statusEl.textContent = "Removing images...";
       const cleaned = removeBloat(data);
 
       statusEl.textContent = "Serializing cleaned JSON...";
@@ -69,6 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
       statusEl.textContent = "Compressing to gzip...";
       const gzipped = window.pako.gzip(cleanedText);
       const blob = new Blob([gzipped], { type: "application/gzip" });
+
+      // Cleaned size (gzip size)
+      const cleanSize = gzipped.length;
+      const reductionPct = ((origSize - cleanSize) / origSize * 100).toFixed(2);
+
+      // Update stats panel
+      origSizeEl.textContent = `${origSize.toLocaleString()} bytes`;
+      cleanSizeEl.textContent = `${cleanSize.toLocaleString()} bytes`;
+      reductionEl.textContent = `${reductionPct}%`;
 
       const outName = "export.scrub.browser.json.gz";
       const url = URL.createObjectURL(blob);
@@ -88,4 +110,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-  
+
