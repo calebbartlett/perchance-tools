@@ -15,17 +15,25 @@
       margin-bottom: 0.5rem;
     }
 
-    .box {
+    /* Global import toolbar */
+    #importBar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: #f0f0f0;
       border: 1px solid #ccc;
-      padding: 1rem;
-      margin-top: 1rem;
       border-radius: 6px;
-      background: #f9f9f9;
+      margin-bottom: 1.5rem;
+    }
+
+    #importStatus {
+      font-weight: bold;
     }
 
     /* Tabs */
     #tabs {
-      margin-top: 2rem;
+      margin-top: 1rem;
       margin-bottom: 1rem;
     }
 
@@ -64,13 +72,29 @@
       border-radius: 4px;
       box-sizing: border-box;
     }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
   </style>
 </head>
 
 <body>
 
   <h1>Perchance Tools</h1>
-  <p>Welcome to your Perchance utility suite. Select a tab to begin.</p>
+
+  <!-- ========================= -->
+  <!-- GLOBAL IMPORT TOOLBAR -->
+  <!-- ========================= -->
+  <div id="importBar">
+    <label><strong>Load Perchance Export:</strong></label>
+    <input type="file" id="fileInput" accept=".gz,.json.gz">
+    <span id="importStatus">No file loaded</span>
+  </div>
 
   <!-- ========================= -->
   <!-- TABS -->
@@ -85,11 +109,11 @@
   <div id="tab-content">
 
     <!-- ========================= -->
-    <!-- PROFILES TAB (Landing Page) -->
+    <!-- PROFILES TAB -->
     <!-- ========================= -->
     <div id="profiles" class="tab-panel active">
       <h2>Character Profiles</h2>
-      <p>This section will allow you to extract, edit, and update characters from your Perchance export.</p>
+      <p>Upload a Perchance export using the toolbar above. Once loaded, character fields will appear here.</p>
 
       <label>
         <strong>Select Character:</strong><br>
@@ -154,9 +178,6 @@
       <div class="box">
         <h3>Perchance Export Scrubber</h3>
 
-        <label>Select .json.gz file:</label><br>
-        <input type="file" id="fileInput" accept=".gz,.json.gz"><br><br>
-
         <button id="processBtn">Process File</button>
 
         <p id="status"></p>
@@ -182,11 +203,9 @@
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
 
-          // Switch active tab button
           document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
 
-          // Switch active panel
           const tab = btn.dataset.tab;
           document.querySelectorAll('.tab-panel').forEach(panel => {
             panel.classList.remove('active');
@@ -198,7 +217,7 @@
   </script>
 
   <!-- ========================= -->
-  <!-- SCRUBBER + EDITOR SCRIPTS -->
+  <!-- SCRIPTS -->
   <!-- ========================= -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
