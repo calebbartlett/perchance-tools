@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perchance Export Scrubber</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    h1 { margin-bottom: 0.5rem; }
+    .box { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; }
+    input, button { margin-top: 0.5rem; }
+    pre { background: #f5f5f5; padding: 1rem; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Perchance Export Scrubber</h1>
+  <p>Select your <code>.json.gz</code> export file and choose what to do.</p>
+
+  <div class="box">
+    <label>
+      <strong>Export file (.json.gz):</strong><br>
+      <input type="file" id="fileInput" accept=".gz,.json">
+    </label>
+    <br><br>
+
+    <label>
+      <input type="checkbox" id="removeImages">
+      Remove images only (<code>__savedImages</code>)
+    </label>
+    <br>
+    <label>
+      <input type="checkbox" id="removeAllCustom">
+      Remove all <code>customData</code> (NOT Perchance-compatible)
+    </label>
+    <br><br>
+
+    <button id="processBtn">Process file</button>
+  </div>
+
+  <div class="box">
+    <h2>Output</h2>
+    <p id="status">No file processed yet.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script src="scrubber.js"></script>
+</body>
+</html>
