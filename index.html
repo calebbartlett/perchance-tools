@@ -15,7 +15,6 @@
       margin-bottom: 0.5rem;
     }
 
-    /* Global import toolbar */
     #importBar {
       display: flex;
       align-items: center;
@@ -31,7 +30,6 @@
       font-weight: bold;
     }
 
-    /* Tabs */
     #tabs {
       margin-top: 1rem;
       margin-bottom: 1rem;
@@ -58,7 +56,6 @@
       display: block;
     }
 
-    /* Profile editor */
     .profile-editor label {
       display: block;
       margin-top: 1rem;
@@ -87,14 +84,12 @@
 
   <h1>Perchance Tools</h1>
 
-  <!-- GLOBAL IMPORT TOOLBAR -->
   <div id="importBar">
     <label><strong>Load Perchance Export:</strong></label>
     <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
     <span id="importStatus">No file loaded</span>
   </div>
 
-  <!-- TABS -->
   <div id="tabs">
     <button class="tab-button active" data-tab="profiles">Profiles</button>
     <button class="tab-button" data-tab="world">World</button>
@@ -108,7 +103,6 @@
     <!-- PROFILES TAB -->
     <div id="profiles" class="tab-panel active">
       <h2>Character Profiles</h2>
-      <p>Upload a Perchance Dexie export using the toolbar above. Characters from the <code>characters</code> table will appear here.</p>
 
       <label>
         <strong>Select Character:</strong><br>
@@ -121,27 +115,27 @@
 
         <label>
           <strong>Name</strong><br>
-          <input type="text" id="charName" placeholder="Character name">
+          <input type="text" id="charName">
         </label>
 
         <label>
           <strong>Role Instruction</strong><br>
-          <textarea id="charRoleInstructions" rows="6" placeholder="Role instruction"></textarea>
+          <textarea id="charRoleInstructions" rows="6"></textarea>
         </label>
 
         <label>
           <strong>Reminder Message</strong><br>
-          <textarea id="charReminder" rows="3" placeholder="Reminder message"></textarea>
+          <textarea id="charReminder" rows="3"></textarea>
         </label>
 
         <label>
           <strong>General Writing Instructions</strong><br>
-          <textarea id="charGeneralWriting" rows="3" placeholder="General writing instructions"></textarea>
+          <textarea id="charGeneralWriting" rows="3"></textarea>
         </label>
 
         <label>
           <strong>Initial Greeting</strong><br>
-          <textarea id="charGreeting" rows="3" placeholder="Initial greeting"></textarea>
+          <textarea id="charGreeting" rows="3"></textarea>
         </label>
 
       </div>
@@ -150,13 +144,13 @@
     <!-- WORLD TAB -->
     <div id="world" class="tab-panel">
       <h2>World</h2>
-      <p>World editing will go here once the JSON structure is mapped.</p>
+      <p>World editing will go here.</p>
     </div>
 
     <!-- LORE TAB -->
     <div id="lore" class="tab-panel">
       <h2>Lore</h2>
-      <p>Lorebook editing will go here once the JSON structure is mapped.</p>
+      <p>Lorebook editing will go here.</p>
     </div>
 
     <!-- VIEWER TAB -->
@@ -165,7 +159,8 @@
 
       <div style="margin-bottom: 1rem;">
         <button id="showRawBtn">Raw JSON</button>
-        <button id="showPrettyBtn">Pretty JSON</button>
+        <button id="showPrettyBtn">Pretty JSON (first 500 lines)</button>
+        <button id="downloadPrettyBtn">Download Full Pretty JSON</button>
       </div>
 
       <pre id="jsonViewer" style="
@@ -181,13 +176,10 @@
     <!-- EXPORT TOOLS TAB -->
     <div id="exportTools" class="tab-panel">
       <h2>Export Tools</h2>
-      <p>Utilities for cleaning, inspecting, and preparing Perchance export files.</p>
 
       <div class="box">
         <h3>Perchance Export Scrubber</h3>
-
         <button id="processBtn">Process File</button>
-
         <p id="status"></p>
       </div>
 
@@ -203,7 +195,6 @@
 
   </div>
 
-  <!-- TAB SWITCHING JS -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tab-button').forEach(btn => {
@@ -221,10 +212,10 @@
     });
   </script>
 
-  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
   <script src="editor.js"></script>
 
 </body>
 </html>
+
