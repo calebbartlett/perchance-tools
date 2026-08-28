@@ -1,133 +1,53 @@
-// ------------------------------------------------------------
-// Remove __savedImages and <image>...</image> blocks (Perchance‑safe)
-// ------------------------------------------------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perchance Export Scrubber</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    h1 { margin-bottom: 0.5rem; }
+    .box { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; }
+    input, button { margin-top: 0.5rem; }
+    pre { background: #f5f5f5; padding: 1rem; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Perchance Export Scrubber</h1>
 
-// Counters
-let savedImagesRemoved = 0;
-let imageTagsRemoved = 0;
+  <p>
+    This tool safely removes <code>__savedImages</code> and any
+    <code>&lt;image&gt;...&lt;/image&gt;</code> blocks from your Perchance export.
+    All other data remains unchanged and fully compatible with Perchance.
+  </p>
 
-function stripImageTags(str) {
-  if (typeof str !== "string") return str;
+  <div class="box">
+    <label>
+      <strong>Export file (.json.gz):</strong><br>
+      <input type="file" id="fileInput" accept=".gz,.json">
+    </label>
+    <br><br>
 
-  // Count how many <image>...</image> blocks exist before removal
-  const matches = str.match(/<image>[\s\S]*?<\/image>/gi);
-  if (matches) {
-    imageTagsRemoved += matches.length;
-  }
+    <button id="processBtn">Process file</button>
+  </div>
 
-  return str.replace(/<image>[\s\S]*?<\/image>/gi, "");
-}
+  <div class="box">
+    <h2>Output</h2>
+    <p id="status">No file processed yet.</p>
 
-function removeBloat(obj) {
-  // Strings: remove <image>...</image>
-  if (typeof obj === "string") {
-    return stripImageTags(obj);
-  }
+    <div id="stats" style="margin-top:1rem; font-size:0.9rem;">
+      <strong>Stats:</strong>
+      <div>Original size: <span id="origSize">-</span></div>
+      <div>Cleaned size: <span id="cleanSize">-</span></div>
+      <div>Reduction: <span id="reduction">-</span></div>
+      <div>SavedImages Removed: <span id="savedImagesCount">-</span></div>
+      <div>Image Tags Removed: <span id="imageTagCount">-</span></div>
+    </div>
+  </div>
 
-  // Arrays: recurse (do NOT remove null/empty)
-  if (Array.isArray(obj)) {
-    return obj.map(item => removeBloat(item));
-  }
+  <!-- gzip library -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
-  // Objects: remove __savedImages and recurse
-  if (obj && typeof obj === "object") {
-    const newObj = {};
-    for (const [k, v] of Object.entries(obj)) {
-
-      if (k === "__savedImages") {
-        savedImagesRemoved++;   // count removal
-        continue;               // skip this key entirely
-      }
-
-      newObj[k] = removeBloat(v);
-    }
-    return newObj;
-  }
-
-  return obj;
-}
-
-// ------------------------------------------------------------
-// Wire up the UI
-// ------------------------------------------------------------
-
-document.addEventListener("DOMContentLoaded", () => {
-  const fileInput = document.getElementById("fileInput");
-  const processBtn = document.getElementById("processBtn");
-  const statusEl = document.getElementById("status");
-
-  // Stats elements
-  const origSizeEl = document.getElementById("origSize");
-  const cleanSizeEl = document.getElementById("cleanSize");
-  const reductionEl = document.getElementById("reduction");
-  const savedImagesCountEl = document.getElementById("savedImagesCount");
-  const imageTagCountEl = document.getElementById("imageTagCount");
-
-  processBtn.addEventListener("click", async () => {
-    const file = fileInput.files[0];
-    if (!file) {
-      statusEl.textContent = "Please select a .json.gz file first.";
-      return;
-    }
-
-    statusEl.textContent = "Reading file...";
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8 = new Uint8Array(arrayBuffer);
-
-      // Reset counters for each run
-      savedImagesRemoved = 0;
-      imageTagsRemoved = 0;
-
-      // Original size (gzip size)
-      const origSize = uint8.byteLength;
-
-      let jsonText;
-      try {
-        jsonText = window.pako.ungzip(uint8, { to: "string" });
-      } catch (e) {
-        jsonText = new TextDecoder("utf-8").decode(uint8);
-      }
-
-      statusEl.textContent = "Parsing JSON...";
-      const data = JSON.parse(jsonText);
-
-      statusEl.textContent = "Removing images...";
-      const cleaned = removeBloat(data);
-
-      statusEl.textContent = "Serializing cleaned JSON...";
-      const cleanedText = JSON.stringify(cleaned);
-
-      statusEl.textContent = "Compressing to gzip...";
-      const gzipped = window.pako.gzip(cleanedText);
-      const cleanSize = gzipped.byteLength;
-
-      const reductionPct = ((origSize - cleanSize) / origSize * 100).toFixed(2);
-
-      // Update stats panel
-      origSizeEl.textContent = `${origSize.toLocaleString()} bytes`;
-      cleanSizeEl.textContent = `${cleanSize.toLocaleString()} bytes`;
-      reductionEl.textContent = `${reductionPct}%`;
-      savedImagesCountEl.textContent = savedImagesRemoved.toLocaleString();
-      imageTagCountEl.textContent = imageTagsRemoved.toLocaleString();
-
-      const blob = new Blob([gzipped], { type: "application/gzip" });
-      const outName = "export.scrub.browser.json.gz";
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = outName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-
-      statusEl.textContent = `Done. Downloaded: ${outName}`;
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = "Error: " + err.message;
-    }
-  });
-});
+  <!-- scrubber logic -->
+  <script src="scrubber.js"></script>
+</body>
+</html>
