@@ -87,37 +87,34 @@
 
   <h1>Perchance Tools</h1>
 
-  <!-- ========================= -->
   <!-- GLOBAL IMPORT TOOLBAR -->
-  <!-- ========================= -->
   <div id="importBar">
     <label><strong>Load Perchance Export:</strong></label>
     <input type="file" id="fileInput" accept=".gz,.json.gz">
     <span id="importStatus">No file loaded</span>
   </div>
 
-  <!-- ========================= -->
   <!-- TABS -->
-  <!-- ========================= -->
   <div id="tabs">
     <button class="tab-button active" data-tab="profiles">Profiles</button>
     <button class="tab-button" data-tab="world">World</button>
     <button class="tab-button" data-tab="lore">Lore</button>
+    <button class="tab-button" data-tab="viewer">Viewer</button>
     <button class="tab-button" data-tab="exportTools">Export Tools</button>
   </div>
 
   <div id="tab-content">
 
-    <!-- ========================= -->
     <!-- PROFILES TAB -->
-    <!-- ========================= -->
     <div id="profiles" class="tab-panel active">
       <h2>Character Profiles</h2>
-      <p>Upload a Perchance export using the toolbar above. Once loaded, character fields will appear here.</p>
+      <p>Upload a Perchance export using the toolbar above. Once loaded, character tools will be wired to the JSON structure.</p>
 
       <label>
         <strong>Select Character:</strong><br>
-        <select id="characterSelect"></select>
+        <select id="characterSelect">
+          <option value="">(no characters loaded yet)</option>
+        </select>
       </label>
 
       <div class="profile-editor">
@@ -150,25 +147,38 @@
       </div>
     </div>
 
-    <!-- ========================= -->
     <!-- WORLD TAB -->
-    <!-- ========================= -->
     <div id="world" class="tab-panel">
       <h2>World</h2>
-      <p>World editing will go here.</p>
+      <p>World editing will go here once the JSON structure is mapped.</p>
     </div>
 
-    <!-- ========================= -->
     <!-- LORE TAB -->
-    <!-- ========================= -->
     <div id="lore" class="tab-panel">
       <h2>Lore</h2>
-      <p>Lorebook editing will go here.</p>
+      <p>Lorebook editing will go here once the JSON structure is mapped.</p>
     </div>
 
-    <!-- ========================= -->
+    <!-- VIEWER TAB -->
+    <div id="viewer" class="tab-panel">
+      <h2>JSON Viewer</h2>
+
+      <div style="margin-bottom: 1rem;">
+        <button id="showRawBtn">Raw JSON</button>
+        <button id="showPrettyBtn">Pretty JSON</button>
+      </div>
+
+      <pre id="jsonViewer" style="
+        white-space: pre-wrap;
+        background: #f9f9f9;
+        border: 1px solid #ccc;
+        padding: 1rem;
+        height: 500px;
+        overflow-y: scroll;
+      "></pre>
+    </div>
+
     <!-- EXPORT TOOLS TAB -->
-    <!-- ========================= -->
     <div id="exportTools" class="tab-panel">
       <h2>Export Tools</h2>
       <p>Utilities for cleaning, inspecting, and preparing Perchance export files.</p>
@@ -193,14 +203,11 @@
 
   </div>
 
-  <!-- ========================= -->
   <!-- TAB SWITCHING JS -->
-  <!-- ========================= -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
-
           document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
 
@@ -214,13 +221,10 @@
     });
   </script>
 
-  <!-- ========================= -->
   <!-- SCRIPTS -->
-  <!-- ========================= -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
   <script src="editor.js"></script>
 
 </body>
 </html>
- 
