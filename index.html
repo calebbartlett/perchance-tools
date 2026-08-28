@@ -8,7 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      max-width: 900px;
+      max-width: 1000px;
     }
 
     h1 {
@@ -70,6 +70,25 @@
       box-sizing: border-box;
     }
 
+    .section-box {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .advanced-label {
+      font-size: 0.85rem;
+      color: #555;
+      font-style: italic;
+    }
+
     .box {
       border: 1px solid #ccc;
       padding: 1rem;
@@ -113,30 +132,175 @@
 
       <div class="profile-editor">
 
-        <label>
-          <strong>Name</strong><br>
-          <input type="text" id="charName">
-        </label>
+        <!-- BASIC SECTION -->
+        <div class="section-box">
+          <div class="section-title">Basic</div>
 
-        <label>
-          <strong>Role Instruction</strong><br>
-          <textarea id="charRoleInstructions" rows="6"></textarea>
-        </label>
+          <label>
+            <strong>Name</strong><br>
+            <input type="text" id="charName">
+          </label>
 
-        <label>
-          <strong>Reminder Message</strong><br>
-          <textarea id="charReminder" rows="3"></textarea>
-        </label>
+          <label>
+            <strong>Role Instruction</strong><br>
+            <textarea id="charRoleInstructions" rows="8"></textarea>
+          </label>
 
-        <label>
-          <strong>General Writing Instructions</strong><br>
-          <textarea id="charGeneralWriting" rows="3"></textarea>
-        </label>
+          <label>
+            <strong>Reminder Message</strong><br>
+            <textarea id="charReminder" rows="3"></textarea>
+          </label>
 
-        <label>
-          <strong>Initial Greeting</strong><br>
-          <textarea id="charGreeting" rows="3"></textarea>
-        </label>
+          <label>
+            <strong>General Writing Instructions</strong><br>
+            <textarea id="charGeneralWriting" rows="3"></textarea>
+          </label>
+
+          <label>
+            <strong>Initial Greeting</strong><br>
+            <textarea id="charGreeting" rows="3"></textarea>
+          </label>
+        </div>
+
+        <!-- ADVANCED: MESSAGE & PROMPTS -->
+        <div class="section-box">
+          <div class="section-title">
+            Advanced — Message & Prompt Settings
+            <span class="advanced-label">(edit only if you know what you’re doing)</span>
+          </div>
+
+          <label>
+            <strong>Message Wrapper Style</strong><br>
+            <textarea id="charMessageWrapperStyle" rows="3"></textarea>
+          </label>
+
+          <label>
+            <strong>Image Prompt Prefix</strong><br>
+            <textarea id="charImagePromptPrefix" rows="2"></textarea>
+          </label>
+
+          <label>
+            <strong>Image Prompt Suffix</strong><br>
+            <textarea id="charImagePromptSuffix" rows="2"></textarea>
+          </label>
+
+          <label>
+            <strong>Image Prompt Triggers</strong><br>
+            <textarea id="charImagePromptTriggers" rows="2"></textarea>
+          </label>
+
+          <label>
+            <strong>Message Input Placeholder</strong><br>
+            <input type="text" id="charMessageInputPlaceholder">
+          </label>
+        </div>
+
+        <!-- ADVANCED: MODEL & TOKENS -->
+        <div class="section-box">
+          <div class="section-title">
+            Advanced — Model & Tokens
+            <span class="advanced-label">(changing these affects how the AI behaves)</span>
+          </div>
+
+          <label>
+            <strong>Model Name</strong><br>
+            <input type="text" id="charModelName">
+          </label>
+
+          <label>
+            <strong>Temperature</strong><br>
+            <input type="number" step="0.01" id="charTemperature">
+          </label>
+
+          <label>
+            <strong>Max Tokens Per Message</strong><br>
+            <input type="number" id="charMaxTokensPerMessage">
+          </label>
+
+          <label>
+            <strong>Text Embedding Model Name</strong><br>
+            <input type="text" id="charTextEmbeddingModelName">
+          </label>
+
+          <label>
+            <strong>Fit Messages In Context Method</strong><br>
+            <input type="text" id="charFitMessagesMethod">
+          </label>
+
+          <label>
+            <strong>Auto Generate Memories</strong><br>
+            <input type="text" id="charAutoGenerateMemories">
+          </label>
+        </div>
+
+        <!-- ADVANCED: AVATAR & SCENE -->
+        <div class="section-box">
+          <div class="section-title">
+            Advanced — Avatar & Scene
+            <span class="advanced-label">(visual presentation only)</span>
+          </div>
+
+          <label>
+            <strong>Avatar URL</strong><br>
+            <input type="text" id="charAvatarUrl">
+          </label>
+
+          <label>
+            <strong>Avatar Size</strong><br>
+            <input type="number" id="charAvatarSize">
+          </label>
+
+          <label>
+            <strong>Avatar Shape</strong><br>
+            <input type="text" id="charAvatarShape">
+          </label>
+
+          <label>
+            <strong>Scene Background URL</strong><br>
+            <input type="text" id="charSceneBackgroundUrl">
+          </label>
+
+          <label>
+            <strong>Scene Music URL</strong><br>
+            <input type="text" id="charSceneMusicUrl">
+          </label>
+        </div>
+
+        <!-- ADVANCED: META & FLAGS -->
+        <div class="section-box">
+          <div class="section-title">
+            Advanced — Meta & Flags
+            <span class="advanced-label">(SEO, streaming, and misc flags)</span>
+          </div>
+
+          <label>
+            <strong>Meta Title</strong><br>
+            <input type="text" id="charMetaTitle">
+          </label>
+
+          <label>
+            <strong>Meta Description</strong><br>
+            <textarea id="charMetaDescription" rows="2"></textarea>
+          </label>
+
+          <label>
+            <strong>Meta Image</strong><br>
+            <input type="text" id="charMetaImage">
+          </label>
+
+          <label>
+            <strong>Streaming Response</strong><br>
+            <select id="charStreamingResponse">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </label>
+
+          <label>
+            <strong>Folder Path</strong><br>
+            <input type="text" id="charFolderPath">
+          </label>
+        </div>
 
       </div>
     </div>
@@ -218,3 +382,4 @@
 
 </body>
 </html>
+
