@@ -1,13 +1,10 @@
-// ======================================================
-// Perchance Tools - Dexie Import + JSON Viewer + Characters
-// ======================================================
-
 let perchanceData = null;
 let rawJsonText = "";
 let prettyJsonText = "";
+let prettyJsonLines = [];
 let charactersRows = [];
 
-// GLOBAL IMPORT LISTENER
+// IMPORT HANDLER
 document.getElementById("fileInput").addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -25,19 +22,19 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
         rawJsonText = decompressed;
         perchanceData = JSON.parse(decompressed);
+
         prettyJsonText = JSON.stringify(perchanceData, null, 2);
+        prettyJsonLines = prettyJsonText.split("\n");
 
         document.getElementById("importStatus").textContent = "File loaded";
 
-        // Populate viewer (raw by default)
-        const viewer = document.getElementById("jsonViewer");
-        if (viewer) viewer.textContent = rawJsonText;
+        // Show raw JSON by default
+        document.getElementById("jsonViewer").textContent = rawJsonText;
 
-        // Extract characters from Dexie structure
+        // Extract Dexie characters
         extractCharactersFromDexie();
         populateCharacterDropdown();
 
-        // Load first character if available
         if (charactersRows.length > 0) {
             loadCharacterIntoEditor(0);
         }
@@ -48,22 +45,38 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
     }
 });
 
-// JSON VIEWER TOGGLE BUTTONS
+// RAW JSON BUTTON
 document.getElementById("showRawBtn").addEventListener("click", () => {
-    const viewer = document.getElementById("jsonViewer");
-    if (!viewer) return;
-    viewer.textContent = rawJsonText || "(no JSON loaded yet)";
+    document.getElementById("jsonViewer").textContent = rawJsonText || "(no JSON loaded yet)";
 });
 
+// PRETTY JSON FIRST 500 LINES BUTTON
 document.getElementById("showPrettyBtn").addEventListener("click", () => {
-    const viewer = document.getElementById("jsonViewer");
-    if (!viewer) return;
-    viewer.textContent = prettyJsonText || "(no JSON loaded yet)";
+    if (!prettyJsonLines.length) {
+        document.getElementById("jsonViewer").textContent = "(no JSON loaded yet)";
+        return;
+    }
+
+    const first500 = prettyJsonLines.slice(0, 500).join("\n");
+    document.getElementById("jsonViewer").textContent = first500;
 });
 
-// ======================================================
-// Dexie characters extraction
-// ======================================================
+// DOWNLOAD FULL PRETTY JSON BUTTON
+document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
+    if (!prettyJsonText) return;
+
+    const blob = new Blob([prettyJsonText], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pretty-export.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+
+// DEXIE CHARACTER EXTRACTION
 function extractCharactersFromDexie() {
     charactersRows = [];
 
@@ -83,13 +96,9 @@ function extractCharactersFromDexie() {
     charactersRows = charactersTable.rows;
 }
 
-// ======================================================
-// Populate dropdown with name + roleInstruction preview
-// ======================================================
+// POPULATE DROPDOWN
 function populateCharacterDropdown() {
     const select = document.getElementById("characterSelect");
-    if (!select) return;
-
     select.innerHTML = "";
 
     if (charactersRows.length === 0) {
@@ -104,9 +113,7 @@ function populateCharacterDropdown() {
         const name = row.name || `Character ${index + 1}`;
         const role = row.roleInstruction;
 
-        const label = role
-            ? `${name} (${role})`
-            : name;
+        const label = role ? `${name} (${role})` : name;
 
         const option = document.createElement("option");
         option.value = index;
@@ -116,15 +123,11 @@ function populateCharacterDropdown() {
 
     select.addEventListener("change", () => {
         const idx = parseInt(select.value, 10);
-        if (!isNaN(idx)) {
-            loadCharacterIntoEditor(idx);
-        }
+        if (!isNaN(idx)) loadCharacterIntoEditor(idx);
     });
 }
 
-// ======================================================
-// Load selected character into editor fields
-// ======================================================
+// LOAD CHARACTER INTO EDITOR
 function loadCharacterIntoEditor(index) {
     const row = charactersRows[index];
     if (!row) return;
@@ -134,7 +137,6 @@ function loadCharacterIntoEditor(index) {
     document.getElementById("charReminder").value = row.reminderMessage || "";
     document.getElementById("charGeneralWriting").value = row.generalWritingInstructions || "";
 
-    // Initial greeting from initialMessages[0].content if present
     let greeting = "";
     if (Array.isArray(row.initialMessages) && row.initialMessages.length > 0) {
         const first = row.initialMessages[0];
