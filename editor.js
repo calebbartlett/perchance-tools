@@ -1,9 +1,10 @@
 // ======================================================
-// Perchance Tools - Multi-Character Extraction Logic
+// Perchance Tools - Import + JSON Viewer
 // ======================================================
 
 let perchanceData = null;
-let characters = [];
+let rawJsonText = "";
+let prettyJsonText = "";
 
 // GLOBAL IMPORT LISTENER
 document.getElementById("fileInput").addEventListener("change", async (event) => {
@@ -13,75 +14,46 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
     try {
         const arrayBuffer = await file.arrayBuffer();
         const decompressed = pako.ungzip(arrayBuffer, { to: "string" });
-        perchanceData = JSON.parse(decompressed);
 
+        // Store raw and parsed JSON
+        rawJsonText = decompressed;
+        perchanceData = JSON.parse(decompressed);
+        prettyJsonText = JSON.stringify(perchanceData, null, 2);
+
+        // Update status
         document.getElementById("importStatus").textContent = "File loaded";
 
-        extractCharacters();
-        populateCharacterDropdown();
-        loadCharacterIntoEditor(0);
+        // Populate viewer with raw JSON by default
+        const viewer = document.getElementById("jsonViewer");
+        if (viewer) {
+            viewer.textContent = rawJsonText;
+        }
 
+        // Profiles / World / Lore extraction will be added once structure is inspected
     } catch (err) {
         console.error("Error loading export:", err);
         document.getElementById("importStatus").textContent = "Error loading file";
     }
 });
 
+// JSON VIEWER TOGGLE BUTTONS
+document.getElementById("showRawBtn").addEventListener("click", () => {
+    const viewer = document.getElementById("jsonViewer");
+    if (!viewer) return;
+    viewer.textContent = rawJsonText || "(no JSON loaded yet)";
+});
+
+document.getElementById("showPrettyBtn").addEventListener("click", () => {
+    const viewer = document.getElementById("jsonViewer");
+    if (!viewer) return;
+    viewer.textContent = prettyJsonText || "(no JSON loaded yet)";
+});
 
 // ======================================================
-// Extract characters from multi-character export
+// Placeholder: Profiles editor wiring will come later
 // ======================================================
-function extractCharacters() {
-    const root = perchanceData?.data?.data?.[0];
 
-    if (!root || !root.characters) {
-        alert("This export does not contain a characters array.");
-        characters = [];
-        return;
-    }
-
-    characters = root.characters.map(c => c.aiSettings || {});
-}
-
-
-// ======================================================
-// Populate dropdown with name + role preview
-// ======================================================
-function populateCharacterDropdown() {
-    const select = document.getElementById("characterSelect");
-    select.innerHTML = "";
-
-    characters.forEach((char, index) => {
-        const name = char.name || `Character ${index + 1}`;
-        const role = char.roleInstructions;
-
-        const label = role
-            ? `${name} (${role})`
-            : name;
-
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = label;
-
-        select.appendChild(option);
-    });
-
-    select.addEventListener("change", () => {
-        loadCharacterIntoEditor(select.value);
-    });
-}
-
-
-// ======================================================
-// Load selected character into editor fields
-// ======================================================
 function loadCharacterIntoEditor(index) {
-    const char = characters[index];
-    if (!char) return;
-
-    document.getElementById("charName").value = char.name || "";
-    document.getElementById("charDescription").value = char.description || "";
-    document.getElementById("charPersonality").value = char.personality || "";
-    document.getElementById("charRoleInstructions").value = char.roleInstructions || "";
-    document.getElementById("charGreeting").value = char.greeting || "";
+    // Intentionally empty for now.
+    // Once we know the JSON structure, we’ll wire this to perchanceData.
 }
