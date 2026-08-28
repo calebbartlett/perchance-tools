@@ -1,27 +1,16 @@
 // ------------------------------------------------------------
-// Remove images or customData
+// Remove images only (Perchance‑safe)
 // ------------------------------------------------------------
 
-function removeBloat(obj, removeImages, removeAllCustom) {
-  if (removeAllCustom && obj && typeof obj === "object" && !Array.isArray(obj)) {
-    if ("customData" in obj) {
-      const newObj = {};
-      for (const [k, v] of Object.entries(obj)) {
-        if (k === "customData") continue;
-        const cleaned = removeBloat(v, removeImages, removeAllCustom);
-        if (cleaned !== undefined) newObj[k] = cleaned;
-      }
-      return newObj;
-    }
-  }
-
+function removeBloat(obj, removeImages) {
+  // Remove ONLY the __savedImages block
   if (obj && typeof obj === "object" && !Array.isArray(obj)) {
     const newObj = {};
     for (const [k, v] of Object.entries(obj)) {
       if (removeImages && k === "__savedImages") {
         continue;
       }
-      const cleaned = removeBloat(v, removeImages, removeAllCustom);
+      const cleaned = removeBloat(v, removeImages);
       if (cleaned !== undefined) newObj[k] = cleaned;
     }
     return newObj;
@@ -30,7 +19,7 @@ function removeBloat(obj, removeImages, removeAllCustom) {
   if (Array.isArray(obj)) {
     const newArr = [];
     for (const item of obj) {
-      const cleaned = removeBloat(item, removeImages, removeAllCustom);
+      const cleaned = removeBloat(item, removeImages);
       if (cleaned !== undefined) newArr.push(cleaned);
     }
     return newArr;
@@ -46,7 +35,6 @@ function removeBloat(obj, removeImages, removeAllCustom) {
 document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.getElementById("fileInput");
   const removeImagesCheckbox = document.getElementById("removeImages");
-  const removeAllCustomCheckbox = document.getElementById("removeAllCustom");
   const processBtn = document.getElementById("processBtn");
   const statusEl = document.getElementById("status");
 
@@ -58,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const removeImages = removeImagesCheckbox.checked;
-    const removeAllCustom = removeAllCustomCheckbox.checked;
 
     statusEl.textContent = "Reading file...";
 
@@ -79,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = JSON.parse(jsonText);
 
       statusEl.textContent = "Applying scrub logic...";
-      const cleaned = removeBloat(data, removeImages, removeAllCustom);
+      const cleaned = removeBloat(data, removeImages);
 
       statusEl.textContent = "Serializing cleaned JSON...";
       const cleanedText = JSON.stringify(cleaned);
