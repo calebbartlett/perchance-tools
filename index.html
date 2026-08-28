@@ -90,7 +90,7 @@
   <!-- GLOBAL IMPORT TOOLBAR -->
   <div id="importBar">
     <label><strong>Load Perchance Export:</strong></label>
-    <input type="file" id="fileInput" accept=".gz,.json.gz">
+    <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
     <span id="importStatus">No file loaded</span>
   </div>
 
@@ -108,7 +108,7 @@
     <!-- PROFILES TAB -->
     <div id="profiles" class="tab-panel active">
       <h2>Character Profiles</h2>
-      <p>Upload a Perchance export using the toolbar above. Once loaded, character tools will be wired to the JSON structure.</p>
+      <p>Upload a Perchance Dexie export using the toolbar above. Characters from the <code>characters</code> table will appear here.</p>
 
       <label>
         <strong>Select Character:</strong><br>
@@ -125,23 +125,23 @@
         </label>
 
         <label>
-          <strong>Description</strong><br>
-          <textarea id="charDescription" rows="4" placeholder="Character description"></textarea>
+          <strong>Role Instruction</strong><br>
+          <textarea id="charRoleInstructions" rows="6" placeholder="Role instruction"></textarea>
         </label>
 
         <label>
-          <strong>Personality</strong><br>
-          <textarea id="charPersonality" rows="4" placeholder="Personality"></textarea>
+          <strong>Reminder Message</strong><br>
+          <textarea id="charReminder" rows="3" placeholder="Reminder message"></textarea>
         </label>
 
         <label>
-          <strong>Role Instructions</strong><br>
-          <textarea id="charRoleInstructions" rows="4" placeholder="Role instructions"></textarea>
+          <strong>General Writing Instructions</strong><br>
+          <textarea id="charGeneralWriting" rows="3" placeholder="General writing instructions"></textarea>
         </label>
 
         <label>
-          <strong>Greeting</strong><br>
-          <textarea id="charGreeting" rows="3" placeholder="Greeting"></textarea>
+          <strong>Initial Greeting</strong><br>
+          <textarea id="charGreeting" rows="3" placeholder="Initial greeting"></textarea>
         </label>
 
       </div>
