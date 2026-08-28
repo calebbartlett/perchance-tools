@@ -28,10 +28,8 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
         document.getElementById("importStatus").textContent = "File loaded";
 
-        // Show raw JSON by default
         document.getElementById("jsonViewer").textContent = rawJsonText;
 
-        // Extract Dexie characters
         extractCharactersFromDexie();
         populateCharacterDropdown();
 
@@ -45,34 +43,28 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
     }
 });
 
-// RAW JSON BUTTON
+// VIEWER BUTTONS
 document.getElementById("showRawBtn").addEventListener("click", () => {
     document.getElementById("jsonViewer").textContent = rawJsonText || "(no JSON loaded yet)";
 });
 
-// PRETTY JSON FIRST 500 LINES BUTTON
 document.getElementById("showPrettyBtn").addEventListener("click", () => {
     if (!prettyJsonLines.length) {
         document.getElementById("jsonViewer").textContent = "(no JSON loaded yet)";
         return;
     }
-
     const first500 = prettyJsonLines.slice(0, 500).join("\n");
     document.getElementById("jsonViewer").textContent = first500;
 });
 
-// DOWNLOAD FULL PRETTY JSON BUTTON
 document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
     if (!prettyJsonText) return;
-
     const blob = new Blob([prettyJsonText], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = "pretty-export.json";
     a.click();
-
     URL.revokeObjectURL(url);
 });
 
@@ -86,8 +78,8 @@ function extractCharactersFromDexie() {
     }
 
     const tablesDump = perchanceData.data.data;
-
     const charactersTable = tablesDump.find(t => t.tableName === "characters");
+
     if (!charactersTable || !Array.isArray(charactersTable.rows)) {
         console.warn("No 'characters' table found in Dexie export.");
         return;
@@ -96,7 +88,7 @@ function extractCharactersFromDexie() {
     charactersRows = charactersTable.rows;
 }
 
-// POPULATE DROPDOWN — NAMES ONLY
+// POPULATE DROPDOWN (names only)
 function populateCharacterDropdown() {
     const select = document.getElementById("characterSelect");
     select.innerHTML = "";
@@ -111,7 +103,6 @@ function populateCharacterDropdown() {
 
     charactersRows.forEach((row, index) => {
         const name = row.name || `Character ${index + 1}`;
-
         const option = document.createElement("option");
         option.value = index;
         option.textContent = name;
@@ -124,11 +115,12 @@ function populateCharacterDropdown() {
     });
 }
 
-// LOAD CHARACTER INTO EDITOR
+// LOAD CHARACTER INTO FULL EDITOR
 function loadCharacterIntoEditor(index) {
     const row = charactersRows[index];
     if (!row) return;
 
+    // BASIC
     document.getElementById("charName").value = row.name || "";
     document.getElementById("charRoleInstructions").value = row.roleInstruction || "";
     document.getElementById("charReminder").value = row.reminderMessage || "";
@@ -142,5 +134,43 @@ function loadCharacterIntoEditor(index) {
         }
     }
     document.getElementById("charGreeting").value = greeting;
+
+    // ADVANCED: MESSAGE & PROMPTS
+    document.getElementById("charMessageWrapperStyle").value = row.messageWrapperStyle || "";
+    document.getElementById("charImagePromptPrefix").value = row.imagePromptPrefix || "";
+    document.getElementById("charImagePromptSuffix").value = row.imagePromptSuffix || "";
+    document.getElementById("charImagePromptTriggers").value = row.imagePromptTriggers || "";
+    document.getElementById("charMessageInputPlaceholder").value = row.messageInputPlaceholder || "";
+
+    // ADVANCED: MODEL & TOKENS
+    document.getElementById("charModelName").value = row.modelName || "";
+    document.getElementById("charTemperature").value = row.temperature ?? "";
+    document.getElementById("charMaxTokensPerMessage").value = row.maxTokensPerMessage ?? "";
+    document.getElementById("charTextEmbeddingModelName").value = row.textEmbeddingModelName || "";
+    document.getElementById("charFitMessagesMethod").value = row.fitMessagesInContextMethod || "";
+    document.getElementById("charAutoGenerateMemories").value = row.autoGenerateMemories || "";
+
+    // ADVANCED: AVATAR & SCENE
+    const avatar = row.avatar || {};
+    document.getElementById("charAvatarUrl").value = avatar.url || "";
+    document.getElementById("charAvatarSize").value = avatar.size ?? "";
+    document.getElementById("charAvatarShape").value = avatar.shape || "";
+
+    const scene = row.scene || {};
+    const background = scene.background || {};
+    const music = scene.music || {};
+    document.getElementById("charSceneBackgroundUrl").value = background.url || "";
+    document.getElementById("charSceneMusicUrl").value = music.url || "";
+
+    // ADVANCED: META & FLAGS
+    document.getElementById("charMetaTitle").value = row.metaTitle || "";
+    document.getElementById("charMetaDescription").value = row.metaDescription || "";
+    document.getElementById("charMetaImage").value = row.metaImage || "";
+
+    const streaming = row.streamingResponse;
+    document.getElementById("charStreamingResponse").value =
+        streaming === false ? "false" : "true";
+
+    document.getElementById("charFolderPath").value = row.folderPath || "";
 }
 
