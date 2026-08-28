@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const uint8 = new Uint8Array(arrayBuffer);
 
       // Original size (gzip size)
-      const origSize = uint8.length;
+      const origSize = uint8.byteLength;
 
       let jsonText;
       try {
@@ -81,10 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       statusEl.textContent = "Compressing to gzip...";
       const gzipped = window.pako.gzip(cleanedText);
-      const blob = new Blob([gzipped], { type: "application/gzip" });
+      const cleanSize = gzipped.byteLength;
 
-      // Cleaned size (gzip size)
-      const cleanSize = gzipped.length;
       const reductionPct = ((origSize - cleanSize) / origSize * 100).toFixed(2);
 
       // Update stats panel
@@ -92,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanSizeEl.textContent = `${cleanSize.toLocaleString()} bytes`;
       reductionEl.textContent = `${reductionPct}%`;
 
+      const blob = new Blob([gzipped], { type: "application/gzip" });
       const outName = "export.scrub.browser.json.gz";
       const url = URL.createObjectURL(blob);
 
