@@ -13,8 +13,12 @@
 </head>
 <body>
   <h1>Perchance Export Scrubber</h1>
-  <p>This tool safely removes <code>__savedImages</code> from your Perchance export.  
-     All other data remains unchanged and fully compatible with Perchance.</p>
+
+  <p>
+    This tool safely removes <code>__savedImages</code> and any
+    <code>&lt;image&gt;...&lt;/image&gt;</code> blocks from your Perchance export.
+    All other data remains unchanged and fully compatible with Perchance.
+  </p>
 
   <div class="box">
     <label>
@@ -29,12 +33,19 @@
   <div class="box">
     <h2>Output</h2>
     <p id="status">No file processed yet.</p>
+
+    <div id="stats" style="margin-top:1rem; font-size:0.9rem;">
+      <strong>Stats:</strong>
+      <div>Original size: <span id="origSize">-</span></div>
+      <div>Cleaned size: <span id="cleanSize">-</span></div>
+      <div>Reduction: <span id="reduction">-</span></div>
+    </div>
   </div>
 
   <!-- gzip library -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
-  <!-- your scrubber logic -->
+  <!-- scrubber logic -->
   <script src="scrubber.js"></script>
 </body>
 </html>
