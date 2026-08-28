@@ -96,7 +96,7 @@ function extractCharactersFromDexie() {
     charactersRows = charactersTable.rows;
 }
 
-// POPULATE DROPDOWN
+// POPULATE DROPDOWN — NAMES ONLY
 function populateCharacterDropdown() {
     const select = document.getElementById("characterSelect");
     select.innerHTML = "";
@@ -111,13 +111,10 @@ function populateCharacterDropdown() {
 
     charactersRows.forEach((row, index) => {
         const name = row.name || `Character ${index + 1}`;
-        const role = row.roleInstruction;
-
-        const label = role ? `${name} (${role})` : name;
 
         const option = document.createElement("option");
         option.value = index;
-        option.textContent = label;
+        option.textContent = name;
         select.appendChild(option);
     });
 
@@ -146,3 +143,4 @@ function loadCharacterIntoEditor(index) {
     }
     document.getElementById("charGreeting").value = greeting;
 }
+
