@@ -2,8 +2,19 @@
 // Remove __savedImages and <image>...</image> blocks (Perchance‑safe)
 // ------------------------------------------------------------
 
+// Counters
+let savedImagesRemoved = 0;
+let imageTagsRemoved = 0;
+
 function stripImageTags(str) {
   if (typeof str !== "string") return str;
+
+  // Count how many <image>...</image> blocks exist before removal
+  const matches = str.match(/<image>[\s\S]*?<\/image>/gi);
+  if (matches) {
+    imageTagsRemoved += matches.length;
+  }
+
   return str.replace(/<image>[\s\S]*?<\/image>/gi, "");
 }
 
@@ -22,9 +33,12 @@ function removeBloat(obj) {
   if (obj && typeof obj === "object") {
     const newObj = {};
     for (const [k, v] of Object.entries(obj)) {
+
       if (k === "__savedImages") {
-        continue; // always remove images
+        savedImagesRemoved++;   // count removal
+        continue;               // skip this key entirely
       }
+
       newObj[k] = removeBloat(v);
     }
     return newObj;
@@ -46,6 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const origSizeEl = document.getElementById("origSize");
   const cleanSizeEl = document.getElementById("cleanSize");
   const reductionEl = document.getElementById("reduction");
+  const savedImagesCountEl = document.getElementById("savedImagesCount");
+  const imageTagCountEl = document.getElementById("imageTagCount");
 
   processBtn.addEventListener("click", async () => {
     const file = fileInput.files[0];
@@ -59,6 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
+
+      // Reset counters for each run
+      savedImagesRemoved = 0;
+      imageTagsRemoved = 0;
 
       // Original size (gzip size)
       const origSize = uint8.byteLength;
@@ -89,6 +109,8 @@ document.addEventListener("DOMContentLoaded", () => {
       origSizeEl.textContent = `${origSize.toLocaleString()} bytes`;
       cleanSizeEl.textContent = `${cleanSize.toLocaleString()} bytes`;
       reductionEl.textContent = `${reductionPct}%`;
+      savedImagesCountEl.textContent = savedImagesRemoved.toLocaleString();
+      imageTagCountEl.textContent = imageTagsRemoved.toLocaleString();
 
       const blob = new Blob([gzipped], { type: "application/gzip" });
       const outName = "export.scrub.browser.json.gz";
