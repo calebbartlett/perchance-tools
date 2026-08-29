@@ -96,6 +96,12 @@
       border-radius: 6px;
       background: #f9f9f9;
     }
+
+    #profileStatus {
+      margin-top: 0.75rem;
+      font-weight: bold;
+      color: #444;
+    }
   </style>
 </head>
 
@@ -302,6 +308,9 @@
           </label>
         </div>
 
+        <button id="applyChangesBtn">Apply Changes to Selected Character</button>
+        <div id="profileStatus"></div>
+
       </div>
     </div>
 
@@ -355,6 +364,11 @@
         <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
         <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
       </div>
+
+      <div class="box">
+        <h3>Download Updated Export</h3>
+        <button id="downloadUpdatedBtn">Download Updated .json.gz</button>
+      </div>
     </div>
 
   </div>
@@ -379,6 +393,9 @@
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
   <script src="editor.js"></script>
+
+</body>
+</html>
 
 </body>
 </html>
