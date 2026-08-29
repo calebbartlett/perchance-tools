@@ -1,5 +1,5 @@
 /************************************************************
- *  SMARHAMR — EDITOR.JS (FULL, CORRECTED)
+ *  SMARHAMR — EDITOR.JS (FULLY PATCHED)
  ************************************************************/
 
 // Global Perchance export object
@@ -538,7 +538,7 @@ function loadWorldFromLore() {
 }
 
 /************************************************************
- *  SAVE WORLD ENGINE INTO LORE
+ *  SAVE WORLD ENGINE INTO LORE (PATCHED WITH embeddings:{})
  ************************************************************/
 function saveWorldToLore() {
     if (!perchanceData) {
@@ -554,15 +554,21 @@ function saveWorldToLore() {
     const serialized = generateWorldEngineText(worldObj);
 
     if (row) {
+        // Update existing row
         if ("content" in row) row.content = serialized;
         else if ("body" in row) row.body = serialized;
         else if ("text" in row) row.text = serialized;
         else row.content = serialized;
+
+        // PATCH: Ensure embeddings exist
+        if (!row.embeddings) row.embeddings = {};
     } else {
+        // Create new row — PATCHED
         const newRow = {
             id: `worldengine-${Date.now()}`,
             title: WORLD_LORE_TITLE,
-            content: serialized
+            content: serialized,
+            embeddings: {}   // REQUIRED FOR PERCHANCE IMPORT
         };
         table.rows.push(newRow);
     }
