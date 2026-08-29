@@ -1,384 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Perchance Tools</title>
-
-  <style>
+<meta charset="UTF-8">
+<title>Perchance Export Editor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="editor.js"></script>
+<style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      max-width: 1000px;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 300px 1fr 1fr;
+        height: 100vh;
     }
 
-    h1 {
-      margin-bottom: 0.5rem;
+    #leftPanel, #middlePanel, #rightPanel {
+        padding: 10px;
+        overflow-y: auto;
+        border-right: 1px solid #ccc;
     }
 
-    #importBar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem;
-      background: #f0f0f0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 1.5rem;
+    #rightPanel { border-right: none; }
+
+    h2 { margin-top: 0; }
+
+    input, textarea {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 6px;
+        font-size: 14px;
     }
 
-    #importStatus {
-      font-weight: bold;
+    button {
+        padding: 8px 12px;
+        margin: 5px 0;
+        width: 100%;
+        font-size: 14px;
     }
 
-    #tabs {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
+    #status {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #444;
     }
-
-    .tab-button {
-      padding: 0.5rem 1rem;
-      margin-right: 0.5rem;
-      border: 1px solid #ccc;
-      background: #eee;
-      cursor: pointer;
-    }
-
-    .tab-button.active {
-      background: #ddd;
-      font-weight: bold;
-    }
-
-    .tab-panel {
-      display: none;
-    }
-
-    .tab-panel.active {
-      display: block;
-    }
-
-    .profile-editor label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      margin-top: 0.3rem;
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-
-    .section-box {
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 6px;
-      background: #f9f9f9;
-    }
-
-    .section-title {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-
-    .advanced-label {
-      font-size: 0.85rem;
-      color: #555;
-      font-style: italic;
-    }
-
-    .box {
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 6px;
-      background: #f9f9f9;
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-  <h1>Perchance Tools</h1>
+<!-- LEFT PANEL: Import + Raw JSON -->
+<div id="leftPanel">
+    <h2>Import Export</h2>
+    <input type="file" id="fileInput">
+    <button id="loadBtn">Load Export</button>
 
-  <div id="importBar">
-    <label><strong>Load Perchance Export:</strong></label>
-    <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
-    <span id="importStatus">No file loaded</span>
-  </div>
+    <h3>Raw JSON</h3>
+    <pre id="rawJson" style="white-space: pre-wrap; background:#f0f0f0; padding:10px;"></pre>
+</div>
 
-  <div id="tabs">
-    <button class="tab-button active" data-tab="profiles">Profiles</button>
-    <button class="tab-button" data-tab="world">World</button>
-    <button class="tab-button" data-tab="lore">Lore</button>
-    <button class="tab-button" data-tab="viewer">Viewer</button>
-    <button class="tab-button" data-tab="exportTools">Export Tools</button>
-  </div>
+<!-- MIDDLE PANEL: Character Profile -->
+<div id="middlePanel">
+    <h2>Character Profile</h2>
 
-  <div id="tab-content">
+    <label>Name</label>
+    <input id="charName">
 
-    <!-- PROFILES TAB -->
-    <div id="profiles" class="tab-panel active">
-      <h2>Character Profiles</h2>
+    <label>Description</label>
+    <textarea id="charDescription" rows="4"></textarea>
 
-      <label>
-        <strong>Select Character:</strong><br>
-        <select id="characterSelect">
-          <option value="">(no characters loaded yet)</option>
-        </select>
-      </label>
+    <label>Personality</label>
+    <textarea id="charPersonality" rows="4"></textarea>
 
-      <div class="profile-editor">
+    <label>Role Instructions</label>
+    <textarea id="charRoleInstructions" rows="4"></textarea>
 
-        <!-- BASIC SECTION -->
-        <div class="section-box">
-          <div class="section-title">Basic</div>
+    <label>Greeting</label>
+    <textarea id="charGreeting" rows="4"></textarea>
 
-          <label>
-            <strong>Name</strong><br>
-            <input type="text" id="charName">
-          </label>
+    <button id="applyChangesBtn">Apply Changes</button>
 
-          <label>
-            <strong>Role Instruction</strong><br>
-            <textarea id="charRoleInstructions" rows="8"></textarea>
-          </label>
+    <div id="status"></div>
+</div>
 
-          <label>
-            <strong>Reminder Message</strong><br>
-            <textarea id="charReminder" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>General Writing Instructions</strong><br>
-            <textarea id="charGeneralWriting" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>Initial Greeting</strong><br>
-            <textarea id="charGreeting" rows="3"></textarea>
-          </label>
-        </div>
-
-        <!-- ADVANCED: MESSAGE & PROMPTS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Message & Prompt Settings
-            <span class="advanced-label">(edit only if you know what you’re doing)</span>
-          </div>
-
-          <label>
-            <strong>Message Wrapper Style</strong><br>
-            <textarea id="charMessageWrapperStyle" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Prefix</strong><br>
-            <textarea id="charImagePromptPrefix" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Suffix</strong><br>
-            <textarea id="charImagePromptSuffix" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Triggers</strong><br>
-            <textarea id="charImagePromptTriggers" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Message Input Placeholder</strong><br>
-            <input type="text" id="charMessageInputPlaceholder">
-          </label>
-        </div>
-
-        <!-- ADVANCED: MODEL & TOKENS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Model & Tokens
-            <span class="advanced-label">(changing these affects how the AI behaves)</span>
-          </div>
-
-          <label>
-            <strong>Model Name</strong><br>
-            <input type="text" id="charModelName">
-          </label>
-
-          <label>
-            <strong>Temperature</strong><br>
-            <input type="number" step="0.01" id="charTemperature">
-          </label>
-
-          <label>
-            <strong>Max Tokens Per Message</strong><br>
-            <input type="number" id="charMaxTokensPerMessage">
-          </label>
-
-          <label>
-            <strong>Text Embedding Model Name</strong><br>
-            <input type="text" id="charTextEmbeddingModelName">
-          </label>
-
-          <label>
-            <strong>Fit Messages In Context Method</strong><br>
-            <input type="text" id="charFitMessagesMethod">
-          </label>
-
-          <label>
-            <strong>Auto Generate Memories</strong><br>
-            <input type="text" id="charAutoGenerateMemories">
-          </label>
-        </div>
-
-        <!-- ADVANCED: AVATAR & SCENE -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Avatar & Scene
-            <span class="advanced-label">(visual presentation only)</span>
-          </div>
-
-          <label>
-            <strong>Avatar URL</strong><br>
-            <input type="text" id="charAvatarUrl">
-          </label>
-
-          <label>
-            <strong>Avatar Size</strong><br>
-            <input type="number" id="charAvatarSize">
-          </label>
-
-          <label>
-            <strong>Avatar Shape</strong><br>
-            <input type="text" id="charAvatarShape">
-          </label>
-
-          <label>
-            <strong>Scene Background URL</strong><br>
-            <input type="text" id="charSceneBackgroundUrl">
-          </label>
-
-          <label>
-            <strong>Scene Music URL</strong><br>
-            <input type="text" id="charSceneMusicUrl">
-          </label>
-        </div>
-
-        <!-- ADVANCED: META & FLAGS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Meta & Flags
-            <span class="advanced-label">(SEO, streaming, and misc flags)</span>
-          </div>
-
-          <label>
-            <strong>Meta Title</strong><br>
-            <input type="text" id="charMetaTitle">
-          </label>
-
-          <label>
-            <strong>Meta Description</strong><br>
-            <textarea id="charMetaDescription" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Meta Image</strong><br>
-            <input type="text" id="charMetaImage">
-          </label>
-
-          <label>
-            <strong>Streaming Response</strong><br>
-            <select id="charStreamingResponse">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </label>
-
-          <label>
-            <strong>Folder Path</strong><br>
-            <input type="text" id="charFolderPath">
-          </label>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- WORLD TAB -->
-    <div id="world" class="tab-panel">
-      <h2>World</h2>
-      <p>World editing will go here.</p>
-    </div>
-
-    <!-- LORE TAB -->
-    <div id="lore" class="tab-panel">
-      <h2>Lore</h2>
-      <p>Lorebook editing will go here.</p>
-    </div>
-
-    <!-- VIEWER TAB -->
-    <div id="viewer" class="tab-panel">
-      <h2>JSON Viewer</h2>
-
-      <div style="margin-bottom: 1rem;">
-        <button id="showRawBtn">Raw JSON</button>
-        <button id="showPrettyBtn">Pretty JSON (first 500 lines)</button>
-        <button id="downloadPrettyBtn">Download Full Pretty JSON</button>
-      </div>
-
-      <pre id="jsonViewer" style="
-        white-space: pre-wrap;
-        background: #f9f9f9;
-        border: 1px solid #ccc;
-        padding: 1rem;
-        height: 500px;
-        overflow-y: scroll;
-      "></pre>
-    </div>
-
-    <!-- EXPORT TOOLS TAB -->
-    <div id="exportTools" class="tab-panel">
-      <h2>Export Tools</h2>
-
-      <div class="box">
-        <h3>Perchance Export Scrubber</h3>
-        <button id="processBtn">Process File</button>
-        <p id="status"></p>
-      </div>
-
-      <div class="box">
-        <h3>Stats</h3>
-        <p><strong>Original size:</strong> <span id="origSize">-</span></p>
-        <p><strong>Cleaned size:</strong> <span id="cleanSize">-</span></p>
-        <p><strong>Reduction:</strong> <span id="reduction">-</span></p>
-        <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
-        <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-
-          const tab = btn.dataset.tab;
-          document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-          });
-          document.getElementById(tab).classList.add('active');
-        });
-      });
-    });
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-  <script src="scrubber.js"></script>
-  <script src="editor.js"></script>
+<!-- RIGHT PANEL: Export Tools -->
+<div id="rightPanel">
+    <h2>Export Tools</h2>
+    <button id="downloadUpdatedBtn">Download Updated Export</button>
+</div>
 
 </body>
 </html>
