@@ -3,6 +3,7 @@ let rawJsonText = "";
 let prettyJsonText = "";
 let prettyJsonLines = [];
 let charactersRows = [];
+let currentCharacterIndex = 0;
 
 // IMPORT HANDLER
 document.getElementById("fileInput").addEventListener("change", async (event) => {
@@ -111,7 +112,10 @@ function populateCharacterDropdown() {
 
     select.addEventListener("change", () => {
         const idx = parseInt(select.value, 10);
-        if (!isNaN(idx)) loadCharacterIntoEditor(idx);
+        if (!isNaN(idx)) {
+            currentCharacterIndex = idx;
+            loadCharacterIntoEditor(idx);
+        }
     });
 }
 
@@ -172,4 +176,105 @@ function loadCharacterIntoEditor(index) {
         streaming === false ? "false" : "true";
 
     document.getElementById("charFolderPath").value = row.folderPath || "";
+
+    document.getElementById("profileStatus").textContent =
+        `Loaded character ${index + 1}.`;
 }
+
+// APPLY CHANGES BACK INTO charactersRows
+document.getElementById("applyChangesBtn").addEventListener("click", () => {
+    if (!perchanceData || charactersRows.length === 0) {
+        alert("No export or characters loaded.");
+        return;
+    }
+
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) {
+        alert("Selected character not found.");
+        return;
+    }
+
+    // BASIC
+    row.name = document.getElementById("charName").value;
+    row.roleInstruction = document.getElementById("charRoleInstructions").value;
+    row.reminderMessage = document.getElementById("charReminder").value;
+    row.generalWritingInstructions = document.getElementById("charGeneralWriting").value;
+
+    const greeting = document.getElementById("charGreeting").value;
+    if (!Array.isArray(row.initialMessages)) {
+        row.initialMessages = [];
+    }
+    if (!row.initialMessages[0]) {
+        row.initialMessages[0] = { role: "assistant", content: "" };
+    }
+    row.initialMessages[0].content = greeting;
+
+    // ADVANCED: MESSAGE & PROMPTS
+    row.messageWrapperStyle = document.getElementById("charMessageWrapperStyle").value;
+    row.imagePromptPrefix = document.getElementById("charImagePromptPrefix").value;
+    row.imagePromptSuffix = document.getElementById("charImagePromptSuffix").value;
+    row.imagePromptTriggers = document.getElementById("charImagePromptTriggers").value;
+    row.messageInputPlaceholder = document.getElementById("charMessageInputPlaceholder").value;
+
+    // ADVANCED: MODEL & TOKENS
+    row.modelName = document.getElementById("charModelName").value;
+    row.temperature = parseFloat(document.getElementById("charTemperature").value) || row.temperature;
+    row.maxTokensPerMessage = parseInt(document.getElementById("charMaxTokensPerMessage").value, 10) || row.maxTokensPerMessage;
+    row.textEmbeddingModelName = document.getElementById("charTextEmbeddingModelName").value;
+    row.fitMessagesInContextMethod = document.getElementById("charFitMessagesMethod").value;
+    row.autoGenerateMemories = document.getElementById("charAutoGenerateMemories").value;
+
+    // ADVANCED: AVATAR & SCENE
+    if (!row.avatar) row.avatar = {};
+    row.avatar.url = document.getElementById("charAvatarUrl").value;
+    row.avatar.size = parseInt(document.getElementById("charAvatarSize").value, 10) || row.avatar.size;
+    row.avatar.shape = document.getElementById("charAvatarShape").value;
+
+    if (!row.scene) row.scene = {};
+    if (!row.scene.background) row.scene.background = {};
+    if (!row.scene.music) row.scene.music = {};
+    row.scene.background.url = document.getElementById("charSceneBackgroundUrl").value;
+    row.scene.music.url = document.getElementById("charSceneMusicUrl").value;
+
+    // ADVANCED: META & FLAGS
+    row.metaTitle = document.getElementById("charMetaTitle").value;
+    row.metaDescription = document.getElementById("charMetaDescription").value;
+    row.metaImage = document.getElementById("charMetaImage").value;
+
+    const streamingValue = document.getElementById("charStreamingResponse").value;
+    row.streamingResponse = (streamingValue === "false") ? false : true;
+
+    row.folderPath = document.getElementById("charFolderPath").value;
+
+    document.getElementById("profileStatus").textContent =
+        `Changes applied to character ${currentCharacterIndex + 1}.`;
+});
+
+// DOWNLOAD UPDATED EXPORT (.json.gz)
+document.getElementById("downloadUpdatedBtn").addEventListener("click", () => {
+    if (!perchanceData) {
+        alert("No export loaded.");
+        return;
+    }
+
+    try {
+        const jsonString = JSON.stringify(perchanceData);
+        const gzipped = pako.gzip(jsonString);
+
+        const blob = new Blob([gzipped], { type: "application/gzip" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "updated_export.json.gz";
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        document.getElementById("importStatus").textContent =
+            "Updated export downloaded.";
+    } catch (err) {
+        console.error("Error generating updated export:", err);
+        alert("Error generating updated export.");
+    }
+});
