@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Perchance Export Editor</title>
+<title>Perchance Multi-Character Editor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <script src="editor.js"></script>
 <style>
@@ -25,7 +25,7 @@
 
     h2 { margin-top: 0; }
 
-    input, textarea {
+    input, textarea, select {
         width: 100%;
         margin-bottom: 10px;
         padding: 6px;
@@ -63,6 +63,9 @@
 <div id="middlePanel">
     <h2>Character Profile</h2>
 
+    <label>Select Character</label>
+    <select id="characterSelect"></select>
+
     <label>Name</label>
     <input id="charName">
 
@@ -91,4 +94,3 @@
 
 </body>
 </html>
-
