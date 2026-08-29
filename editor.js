@@ -1,4 +1,6 @@
 let perchanceData = null;
+let characters = [];
+let currentIndex = 0;
 
 // ===============================
 // Load Perchance Export
@@ -16,9 +18,11 @@ document.getElementById("loadBtn").addEventListener("click", async () => {
 
         perchanceData = JSON.parse(decompressed);
 
-        document.getElementById("rawJson").textContent = JSON.stringify(perchanceData, null, 2);
+        document.getElementById("rawJson").textContent =
+            JSON.stringify(perchanceData, null, 2);
 
-        loadCharacterFields();
+        loadCharacterList();
+        loadCharacterFields(0);
 
         document.getElementById("status").textContent = "Export loaded.";
     } catch (err) {
@@ -28,12 +32,39 @@ document.getElementById("loadBtn").addEventListener("click", async () => {
 });
 
 // ===============================
+// Load Character List (Dropdown)
+// ===============================
+function loadCharacterList() {
+    characters = perchanceData?.data?.data?.[0]?.characters || [];
+
+    const select = document.getElementById("characterSelect");
+    select.innerHTML = "";
+
+    characters.forEach((char, i) => {
+        const ai = char.aiSettings || {};
+        const name = ai.name || `Character ${i + 1}`;
+        const role = ai.roleInstructions ? ai.roleInstructions.slice(0, 40) : "";
+        const preview = role ? ` — (${role}...)` : "";
+
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `${i + 1}: ${name}${preview}`;
+        select.appendChild(option);
+    });
+
+    select.addEventListener("change", () => {
+        currentIndex = parseInt(select.value);
+        loadCharacterFields(currentIndex);
+    });
+}
+
+// ===============================
 // Load Character Fields into UI
 // ===============================
-function loadCharacterFields() {
-    const ai = perchanceData?.data?.data?.[0]?.aiSettings;
+function loadCharacterFields(index) {
+    const ai = characters[index]?.aiSettings;
     if (!ai) {
-        alert("Could not find aiSettings in export.");
+        alert("Could not find aiSettings for this character.");
         return;
     }
 
@@ -53,9 +84,9 @@ document.getElementById("applyChangesBtn").addEventListener("click", () => {
         return;
     }
 
-    const ai = perchanceData?.data?.data?.[0]?.aiSettings;
+    const ai = characters[currentIndex]?.aiSettings;
     if (!ai) {
-        alert("Could not find aiSettings in export.");
+        alert("Could not find aiSettings for this character.");
         return;
     }
 
@@ -65,7 +96,8 @@ document.getElementById("applyChangesBtn").addEventListener("click", () => {
     ai.roleInstructions = document.getElementById("charRoleInstructions").value;
     ai.greeting = document.getElementById("charGreeting").value;
 
-    document.getElementById("status").textContent = "Changes applied (not downloaded yet).";
+    document.getElementById("status").textContent =
+        `Changes applied to character ${currentIndex + 1}.`;
 });
 
 // ===============================
@@ -91,9 +123,11 @@ document.getElementById("downloadUpdatedBtn").addEventListener("click", () => {
 
         URL.revokeObjectURL(url);
 
-        document.getElementById("status").textContent = "Updated export downloaded.";
+        document.getElementById("status").textContent =
+            "Updated export downloaded.";
     } catch (err) {
         console.error(err);
-        document.getElementById("status").textContent = "Error generating updated export.";
+        document.getElementById("status").textContent =
+            "Error generating updated export.";
     }
 });
