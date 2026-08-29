@@ -78,11 +78,10 @@
   <h1>SmarHamr Perchance Editor</h1>
 
   <!-- ========================= -->
-  <!-- TOP BAR -->
+  <!-- TOP BAR (GLOBAL ACTIONS) -->
   <!-- ========================= -->
   <div class="top-bar">
     <input type="file" id="fileInput" accept=".json,.gz,.json.gz">
-    <button id="applyChangesBtnTop">Apply Character Changes</button>
     <button id="downloadUpdatedBtnTop">Download Updated Export</button>
     <button id="scrubBtnTop">Scrub Export</button>
     <span id="importStatus"></span>
@@ -111,6 +110,11 @@
       <select id="characterSelect">
         <option value="">(none)</option>
       </select>
+
+      <!-- APPLY BUTTON FOR THIS TAB -->
+      <button id="applyProfileBtn" style="margin-top:1rem;">
+        Apply Profile Changes
+      </button>
 
       <div class="box">
         <h3>Basic</h3>
@@ -223,22 +227,41 @@
       <h2>Lore Editor</h2>
       <p>Create or edit world lore stored in your Perchance export.</p>
 
-      <button id="generateLoreTemplateBtn">Generate World Template</button>
+      <!-- APPLY BUTTON FOR THIS TAB -->
+      <button id="applyLoreBtn" style="margin-bottom:1rem;">
+        Apply Lore Changes
+      </button>
 
+      <!-- TEMPLATE GENERATOR -->
+      <button id="generateLoreTemplateBtn" style="margin-bottom:1rem;">
+        Generate World Template
+      </button>
+
+      <!-- MAIN LORE TEXT AREA -->
       <textarea id="loreEditor" rows="20" style="margin-top:1rem;"></textarea>
-
-      <button id="saveLoreBtn" style="margin-top:1rem;">Save Lore</button>
     </div>
 
     <!-- ========================= -->
     <!-- MEMORY TAB (placeholder) -->
     <!-- ========================= -->
     <div id="memory" class="tab-panel">
-      <h2>Memory</h2>
-      <p>Memory editing will be added here.</p>
+      <h2>Memory Editor</h2>
+      <p>This section will allow editing Perchance memory rows once implemented.</p>
+
+      <!-- APPLY BUTTON FOR THIS TAB -->
+      <button id="applyMemoryBtn" style="margin-bottom:1rem;">
+        Apply Memory Changes
+      </button>
 
       <div class="box">
-        <p>(Placeholder)</p>
+        <p><strong>Memory editing is not yet implemented.</strong></p>
+        <p>This placeholder will later support:</p>
+        <ul>
+          <li>Viewing memory rows</li>
+          <li>Editing memory content</li>
+          <li>Adding new memory entries</li>
+          <li>Deleting memory entries</li>
+        </ul>
       </div>
     </div>
 
@@ -249,35 +272,47 @@
       <h2>Dexie Viewer</h2>
       <p>View raw or pretty JSON from your Perchance export.</p>
 
-      <button id="showRawBtn">Show Raw JSON</button>
-      <button id="showPrettyBtn">Show Pretty JSON</button>
-      <button id="downloadPrettyBtn">Download Pretty JSON</button>
+      <div style="margin-bottom:1rem;">
+        <button id="showRawBtn">Show Raw JSON</button>
+        <button id="showPrettyBtn">Show Pretty JSON</button>
+        <button id="downloadPrettyBtn">Download Pretty JSON</button>
+      </div>
 
       <pre id="jsonViewer" class="box" style="white-space:pre-wrap; margin-top:1rem;"></pre>
     </div>
 
-  </div> <!-- end tab-content -->
+  </div> <!-- end of #tab-content -->
 
   <!-- ========================= -->
-  <!-- SCRIPTS -->
+  <!-- SCRIPT INCLUDES -->
   <!-- ========================= -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="scrubber.js"></script>
   <script src="editor.js"></script>
 
+  <!-- ========================= -->
+  <!-- TAB SWITCHING LOGIC -->
+  <!-- ========================= -->
   <script>
-    // Tab switching
     document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.tab-button').forEach(btn => {
+      const buttons = document.querySelectorAll('.tab-button');
+      const panels = document.querySelectorAll('.tab-panel');
+
+      buttons.forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+          // deactivate all buttons
+          buttons.forEach(b => b.classList.remove('active'));
+          // activate clicked button
           btn.classList.add('active');
 
           const tab = btn.dataset.tab;
-          document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-          });
-          document.getElementById(tab).classList.add('active');
+
+          // hide all panels
+          panels.forEach(panel => panel.classList.remove('active'));
+
+          // show selected panel
+          const activePanel = document.getElementById(tab);
+          if (activePanel) activePanel.classList.add('active');
         });
       });
     });
