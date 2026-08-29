@@ -267,13 +267,21 @@ function downloadUpdatedExport() {
     }
 
     try {
-        // Add timestamp inside JSON
+        // Create timestamp YYYYMMDDhhmm
+        const now = new Date();
+        const timestamp =
+            now.getFullYear().toString() +
+            String(now.getMonth() + 1).padStart(2, "0") +
+            String(now.getDate()).padStart(2, "0") +
+            String(now.getHours()).padStart(2, "0") +
+            String(now.getMinutes()).padStart(2, "0");
+
+        // Store timestamp in JSON
         if (!perchanceData.meta) perchanceData.meta = {};
-        const timestamp = new Date().toISOString();
         perchanceData.meta.exportTimestamp = timestamp;
 
-        // Add timestamp to filename
-        const safeTimestamp = timestamp.replace(/[:.]/g, "-");
+        // Filename without "updated_"
+        const filename = `export_${timestamp}.json.gz`;
 
         const jsonString = JSON.stringify(perchanceData);
         const gzipped = pako.gzip(jsonString);
@@ -283,7 +291,7 @@ function downloadUpdatedExport() {
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = `updated_export_${safeTimestamp}.json.gz`;
+        a.download = filename;
         a.click();
 
         URL.revokeObjectURL(url);
