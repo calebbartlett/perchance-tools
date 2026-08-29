@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Perchance Tools</title>
+  <title>SmarHamr</title>
 
   <style>
     body {
@@ -23,11 +23,14 @@
       background: #f0f0f0;
       border: 1px solid #ccc;
       border-radius: 6px;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
     }
 
     #importStatus {
       font-weight: bold;
+      margin-left: 4px;
+      display: block;
+      padding: 0.25rem;
     }
 
     #tabs {
@@ -107,18 +110,18 @@
 
 <body>
 
-  <h1>Perchance Tools</h1>
+  <h1>SmarHamr</h1>
 
   <!-- GLOBAL ACTION BAR -->
   <div id="importBar">
-    <label><strong>Load Perchance Export:</strong></label>
     <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
 
-    <button id="applyChangesBtnTop">Apply Changes</button>
-    <button id="downloadUpdatedBtnTop">Export Updated</button>
-
-    <span id="importStatus">No file loaded</span>
+    <button id="applyChangesBtnTop">Apply</button>
+    <button id="downloadUpdatedBtnTop">Export</button>
+    <button id="scrubBtnTop">Scrub</button>
   </div>
+
+  <span id="importStatus">No file loaded</span>
 
   <div id="tabs">
     <button class="tab-button active" data-tab="profiles">Profiles</button>
