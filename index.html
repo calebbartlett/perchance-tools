@@ -2,37 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SmarHamr</title>
+  <title>SmarHamr Perchance Editor</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      max-width: 1000px;
+      max-width: 1100px;
     }
 
     h1 {
       margin-bottom: 0.5rem;
     }
 
-    #importBar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem;
-      background: #f0f0f0;
+    .top-bar {
+      margin-bottom: 1rem;
+    }
+
+    .top-bar button {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
+      background: #eee;
+      cursor: pointer;
     }
 
-    #importStatus {
-      font-weight: bold;
-      margin-left: 4px;
-      display: block;
-      padding: 0.25rem;
-    }
-
+    /* Tabs */
     #tabs {
       margin-top: 1rem;
       margin-bottom: 1rem;
@@ -59,39 +54,6 @@
       display: block;
     }
 
-    .profile-editor label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      margin-top: 0.3rem;
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-
-    .section-box {
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 6px;
-      background: #f9f9f9;
-    }
-
-    .section-title {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-
-    .advanced-label {
-      font-size: 0.85rem;
-      color: #555;
-      font-style: italic;
-    }
-
     .box {
       border: 1px solid #ccc;
       padding: 1rem;
@@ -100,391 +62,211 @@
       background: #f9f9f9;
     }
 
-    #profileStatus {
-      margin-top: 0.75rem;
-      font-weight: bold;
-      color: #444;
+    textarea, input, select {
+      width: 100%;
+      margin-top: 0.3rem;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>SmarHamr</h1>
+  <h1>SmarHamr Perchance Editor</h1>
 
-  <!-- GLOBAL ACTION BAR -->
-  <div id="importBar">
-    <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
-
-    <button id="applyChangesBtnTop">Apply</button>
-    <button id="downloadUpdatedBtnTop">Export</button>
-    <button id="scrubBtnTop">Scrub</button>
+  <!-- ========================= -->
+  <!-- TOP BAR -->
+  <!-- ========================= -->
+  <div class="top-bar">
+    <input type="file" id="fileInput" accept=".json,.gz,.json.gz">
+    <button id="applyChangesBtnTop">Apply Character Changes</button>
+    <button id="downloadUpdatedBtnTop">Download Updated Export</button>
+    <button id="scrubBtnTop">Scrub Export</button>
+    <span id="importStatus"></span>
   </div>
 
-  <span id="importStatus">No file loaded</span>
-
+  <!-- ========================= -->
+  <!-- TABS -->
+  <!-- ========================= -->
   <div id="tabs">
     <button class="tab-button active" data-tab="profiles">Profiles</button>
-    <button class="tab-button" data-tab="world">World</button>
     <button class="tab-button" data-tab="lore">Lore</button>
-    <button class="tab-button" data-tab="viewer">Viewer</button>
-    <button class="tab-button" data-tab="exportTools">Export Tools</button>
+    <button class="tab-button" data-tab="memory">Memory</button>
+    <button class="tab-button" data-tab="dexie">Dexie Viewer</button>
   </div>
 
   <div id="tab-content">
 
+    <!-- ========================= -->
     <!-- PROFILES TAB -->
+    <!-- ========================= -->
     <div id="profiles" class="tab-panel active">
       <h2>Character Profiles</h2>
+      <p>Edit characters extracted from your Perchance export.</p>
 
-      <label>
-        <strong>Select Character:</strong><br>
-        <select id="characterSelect">
-          <option value="">(no characters loaded yet)</option>
+      <label><strong>Select Character:</strong></label>
+      <select id="characterSelect">
+        <option value="">(none)</option>
+      </select>
+
+      <div class="box">
+        <h3>Basic</h3>
+
+        <label>Name</label>
+        <input type="text" id="charName">
+
+        <label>Role Instructions</label>
+        <textarea id="charRoleInstructions" rows="3"></textarea>
+
+        <label>Reminder Message</label>
+        <textarea id="charReminder" rows="3"></textarea>
+
+        <label>General Writing Instructions</label>
+        <textarea id="charGeneralWriting" rows="3"></textarea>
+
+        <label>Greeting</label>
+        <textarea id="charGreeting" rows="3"></textarea>
+      </div>
+
+      <div class="box">
+        <h3>Advanced — Message & Prompts</h3>
+
+        <label>Message Wrapper Style</label>
+        <textarea id="charMessageWrapperStyle" rows="2"></textarea>
+
+        <label>Image Prompt Prefix</label>
+        <input type="text" id="charImagePromptPrefix">
+
+        <label>Image Prompt Suffix</label>
+        <input type="text" id="charImagePromptSuffix">
+
+        <label>Image Prompt Triggers</label>
+        <textarea id="charImagePromptTriggers" rows="2"></textarea>
+
+        <label>Message Input Placeholder</label>
+        <input type="text" id="charMessageInputPlaceholder">
+      </div>
+
+      <div class="box">
+        <h3>Advanced — Model & Tokens</h3>
+
+        <label>Model Name</label>
+        <input type="text" id="charModelName">
+
+        <label>Temperature</label>
+        <input type="number" id="charTemperature" step="0.01">
+
+        <label>Max Tokens Per Message</label>
+        <input type="number" id="charMaxTokensPerMessage">
+
+        <label>Text Embedding Model Name</label>
+        <input type="text" id="charTextEmbeddingModelName">
+
+        <label>Fit Messages Method</label>
+        <input type="text" id="charFitMessagesMethod">
+
+        <label>Auto Generate Memories</label>
+        <input type="text" id="charAutoGenerateMemories">
+      </div>
+
+      <div class="box">
+        <h3>Advanced — Avatar & Scene</h3>
+
+        <label>Avatar URL</label>
+        <input type="text" id="charAvatarUrl">
+
+        <label>Avatar Size</label>
+        <input type="number" id="charAvatarSize">
+
+        <label>Avatar Shape</label>
+        <input type="text" id="charAvatarShape">
+
+        <label>Scene Background URL</label>
+        <input type="text" id="charSceneBackgroundUrl">
+
+        <label>Scene Music URL</label>
+        <input type="text" id="charSceneMusicUrl">
+      </div>
+
+      <div class="box">
+        <h3>Advanced — Meta & Flags</h3>
+
+        <label>Meta Title</label>
+        <input type="text" id="charMetaTitle">
+
+        <label>Meta Description</label>
+        <textarea id="charMetaDescription" rows="2"></textarea>
+
+        <label>Meta Image</label>
+        <input type="text" id="charMetaImage">
+
+        <label>Streaming Response</label>
+        <select id="charStreamingResponse">
+          <option value="true">true</option>
+          <option value="false">false</option>
         </select>
-      </label>
 
-      <div class="profile-editor">
-
-        <!-- BASIC SECTION -->
-        <div class="section-box">
-          <div class="section-title">Basic</div>
-
-          <label>
-            <strong>Name</strong><br>
-            <input type="text" id="charName">
-          </label>
-
-          <label>
-            <strong>Role Instruction</strong><br>
-            <textarea id="charRoleInstructions" rows="8"></textarea>
-          </label>
-
-          <label>
-            <strong>Reminder Message</strong><br>
-            <textarea id="charReminder" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>General Writing Instructions</strong><br>
-            <textarea id="charGeneralWriting" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>Initial Greeting</strong><br>
-            <textarea id="charGreeting" rows="3"></textarea>
-          </label>
-        </div>
-
-        <!-- ADVANCED: MESSAGE & PROMPTS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Message & Prompt Settings
-            <span class="advanced-label">(edit only if you know what you’re doing)</span>
-          </div>
-
-          <label>
-            <strong>Message Wrapper Style</strong><br>
-            <textarea id="charMessageWrapperStyle" rows="3"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Prefix</strong><br>
-            <textarea id="charImagePromptPrefix" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Suffix</strong><br>
-            <textarea id="charImagePromptSuffix" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Image Prompt Triggers</strong><br>
-            <textarea id="charImagePromptTriggers" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Message Input Placeholder</strong><br>
-            <input type="text" id="charMessageInputPlaceholder">
-          </label>
-        </div>
-
-        <!-- ADVANCED: MODEL & TOKENS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Model & Tokens
-            <span class="advanced-label">(changing these affects how the AI behaves)</span>
-          </div>
-
-          <label>
-            <strong>Model Name</strong><br>
-            <input type="text" id="charModelName">
-          </label>
-
-          <label>
-            <strong>Temperature</strong><br>
-            <input type="number" step="0.01" id="charTemperature">
-          </label>
-
-          <label>
-            <strong>Max Tokens Per Message</strong><br>
-            <input type="number" id="charMaxTokensPerMessage">
-          </label>
-
-          <label>
-            <strong>Text Embedding Model Name</strong><br>
-            <input type="text" id="charTextEmbeddingModelName">
-          </label>
-
-          <label>
-            <strong>Fit Messages In Context Method</strong><br>
-            <input type="text" id="charFitMessagesMethod">
-          </label>
-
-          <label>
-            <strong>Auto Generate Memories</strong><br>
-            <input type="text" id="charAutoGenerateMemories">
-          </label>
-        </div>
-
-        <!-- ADVANCED: AVATAR & SCENE -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Avatar & Scene
-            <span class="advanced-label">(visual presentation only)</span>
-          </div>
-
-          <label>
-            <strong>Avatar URL</strong><br>
-            <input type="text" id="charAvatarUrl">
-          </label>
-
-          <label>
-            <strong>Avatar Size</strong><br>
-            <input type="number" id="charAvatarSize">
-          </label>
-
-          <label>
-            <strong>Avatar Shape</strong><br>
-            <input type="text" id="charAvatarShape">
-          </label>
-
-          <label>
-            <strong>Scene Background URL</strong><br>
-            <input type="text" id="charSceneBackgroundUrl">
-          </label>
-
-          <label>
-            <strong>Scene Music URL</strong><br>
-            <input type="text" id="charSceneMusicUrl">
-          </label>
-        </div>
-
-        <!-- ADVANCED: META & FLAGS -->
-        <div class="section-box">
-          <div class="section-title">
-            Advanced — Meta & Flags
-            <span class="advanced-label">(SEO, streaming, and misc flags)</span>
-          </div>
-
-          <label>
-            <strong>Meta Title</strong><br>
-            <input type="text" id="charMetaTitle">
-          </label>
-
-          <label>
-            <strong>Meta Description</strong><br>
-            <textarea id="charMetaDescription" rows="2"></textarea>
-          </label>
-
-          <label>
-            <strong>Meta Image</strong><br>
-            <input type="text" id="charMetaImage">
-          </label>
-
-          <label>
-            <strong>Streaming Response</strong><br>
-            <select id="charStreamingResponse">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </label>
-
-          <label>
-            <strong>Folder Path</strong><br>
-            <input type="text" id="charFolderPath">
-          </label>
-        </div>
-
-        <div id="profileStatus"></div>
-
+        <label>Folder Path</label>
+        <input type="text" id="charFolderPath">
       </div>
+
+      <p id="profileStatus"></p>
     </div>
 
-    <!-- WORLD TAB -->
-    <div id="world" class="tab-panel">
-      <h2>World Engine</h2>
-
-      <div class="section-box">
-        <div class="section-title">
-          World State Generator
-          <span class="advanced-label">(stored in Lore as “WorldEngine by SmarHamr”)</span>
-        </div>
-
-        <label>
-          <strong>Stability</strong><br>
-          <input type="range" id="worldStability" min="0" max="1" step="0.01">
-          <span id="worldStabilityVal"></span>
-        </label>
-
-        <label>
-          <strong>Tension</strong><br>
-          <input type="range" id="worldTension" min="0" max="1" step="0.01">
-          <span id="worldTensionVal"></span>
-        </label>
-
-        <label>
-          <strong>Mystery</strong><br>
-          <input type="range" id="worldMystery" min="0" max="1" step="0.01">
-          <span id="worldMysteryVal"></span>
-        </label>
-
-        <label>
-          <strong>Tech Level</strong><br>
-          <input type="range" id="worldTechLevel" min="0" max="1" step="0.01">
-          <span id="worldTechLevelVal"></span>
-        </label>
-
-        <label>
-          <strong>Magic Level</strong><br>
-          <input type="range" id="worldMagicLevel" min="0" max="1" step="0.01">
-          <span id="worldMagicLevelVal"></span>
-        </label>
-
-        <label>
-          <strong>Social Cohesion</strong><br>
-          <input type="range" id="worldSocialCohesion" min="0" max="1" step="0.01">
-          <span id="worldSocialCohesionVal"></span>
-        </label>
-
-        <label>
-          <strong>Environmental Health</strong><br>
-          <input type="range" id="worldEnvironmentalHealth" min="0" max="1" step="0.01">
-          <span id="worldEnvironmentalHealthVal"></span>
-        </label>
-
-        <label>
-          <strong>Narrative Momentum</strong><br>
-          <input type="range" id="worldNarrativeMomentum" min="0" max="1" step="0.01">
-          <span id="worldNarrativeMomentumVal"></span>
-        </label>
-
-        <div style="margin-top: 0.75rem;">
-          <button id="worldReflectBtn">Reflect World</button>
-          <button id="worldResetBtn">Reset World State</button>
-        </div>
-
-        <div id="worldSummary" style="margin-top: 0.75rem; font-weight: bold;"></div>
-      </div>
-
-      <div class="section-box">
-        <div class="section-title">
-          World Rules
-          <span class="advanced-label">(stored in Lore block)</span>
-        </div>
-
-        <label>
-          <input type="checkbox" id="worldAdvancedToggle">
-          <strong>Advanced Mode</strong>
-        </label>
-
-        <div id="worldAdvancedPanel" style="margin-top: 0.75rem; display: none;">
-
-          <label>
-            <strong>Growth Rules</strong><br>
-            <textarea id="worldGrowthRules" rows="5"
-              placeholder="- if tension > 0.7 and socialCohesion < 0.4: stability -= 0.05"></textarea>
-          </label>
-
-          <label>
-            <strong>World → Characters Influence Rules</strong><br>
-            <textarea id="worldInfluenceRules" rows="5"
-              placeholder="- if stability < 0.3: characters[*].toneBias = cautious"></textarea>
-          </label>
-
-          <label>
-            <strong>Characters → World Feedback Rules</strong><br>
-            <textarea id="worldFeedbackRules" rows="5"
-              placeholder="- if characters[*].confidence > 0.8: socialCohesion += 0.05"></textarea>
-          </label>
-
-          <div style="margin-top: 0.75rem;">
-            <button id="worldApplyRulesBtn">Apply Rules</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-box">
-        <div class="section-title">
-          World History
-          <span class="advanced-label">(stored in Lore block)</span>
-        </div>
-
-        <textarea id="worldHistory" rows="8" readonly
-          style="font-family: monospace; white-space: pre-wrap;"></textarea>
-      </div>
-    </div>
-
+    <!-- ========================= -->
     <!-- LORE TAB -->
+    <!-- ========================= -->
     <div id="lore" class="tab-panel">
-      <h2>Lore</h2>
-      <p>Lorebook editing will go here.</p>
+      <h2>Lore Editor</h2>
+      <p>Create or edit world lore stored in your Perchance export.</p>
+
+      <button id="generateLoreTemplateBtn">Generate World Template</button>
+
+      <textarea id="loreEditor" rows="20" style="margin-top:1rem;"></textarea>
+
+      <button id="saveLoreBtn" style="margin-top:1rem;">Save Lore</button>
     </div>
 
-    <!-- VIEWER TAB -->
-    <div id="viewer" class="tab-panel">
-      <h2>JSON Viewer</h2>
-
-      <div style="margin-bottom: 1rem;">
-        <button id="showRawBtn">Raw JSON</button>
-        <button id="showPrettyBtn">Pretty JSON (first 500 lines)</button>
-        <button id="downloadPrettyBtn">Download Full Pretty JSON</button>
-      </div>
-
-      <pre id="jsonViewer" style="
-        white-space: pre-wrap;
-        background: #f9f9f9;
-        border: 1px solid #ccc;
-        padding: 1rem;
-        height: 500px;
-        overflow-y: scroll;
-      "></pre>
-    </div>
-
-    <!-- EXPORT TOOLS TAB -->
-    <div id="exportTools" class="tab-panel">
-      <h2>Export Tools</h2>
+    <!-- ========================= -->
+    <!-- MEMORY TAB (placeholder) -->
+    <!-- ========================= -->
+    <div id="memory" class="tab-panel">
+      <h2>Memory</h2>
+      <p>Memory editing will be added here.</p>
 
       <div class="box">
-        <h3>Perchance Export Scrubber</h3>
-        <button id="processBtn">Process File</button>
-        <p id="status"></p>
+        <p>(Placeholder)</p>
       </div>
-
-      <div class="box">
-        <h3>Stats</h3>
-        <p><strong>Original size:</strong> <span id="origSize">-</span></p>
-        <p><strong>Cleaned size:</strong> <span id="cleanSize">-</span></p>
-        <p><strong>Reduction:</strong> <span id="reduction">-</span></p>
-        <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
-        <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
-      </div>
-
     </div>
 
-  </div>
+    <!-- ========================= -->
+    <!-- DEXIE VIEWER TAB -->
+    <!-- ========================= -->
+    <div id="dexie" class="tab-panel">
+      <h2>Dexie Viewer</h2>
+      <p>View raw or pretty JSON from your Perchance export.</p>
+
+      <button id="showRawBtn">Show Raw JSON</button>
+      <button id="showPrettyBtn">Show Pretty JSON</button>
+      <button id="downloadPrettyBtn">Download Pretty JSON</button>
+
+      <pre id="jsonViewer" class="box" style="white-space:pre-wrap; margin-top:1rem;"></pre>
+    </div>
+
+  </div> <!-- end tab-content -->
+
+  <!-- ========================= -->
+  <!-- SCRIPTS -->
+  <!-- ========================= -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script src="scrubber.js"></script>
+  <script src="editor.js"></script>
 
   <script>
+    // Tab switching
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -500,10 +282,6 @@
       });
     });
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-  <script src="scrubber.js"></script>
-  <script src="editor.js"></script>
 
 </body>
 </html>
