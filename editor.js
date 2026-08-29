@@ -547,3 +547,4 @@ document.addEventListener("DOMContentLoaded", () => {
  *  END OF FILE
  ************************************************************/
 console.log("SmarHamr editor.js (Lore version) fully loaded.");
+ 
