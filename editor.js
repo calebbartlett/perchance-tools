@@ -152,3 +152,144 @@ function loadCharacterIntoEditor(index) {
     document.getElementById("charMaxTokensPerMessage").value = row.maxTokensPerMessage ?? "";
     document.getElementById("charTextEmbeddingModelName").value = row.textEmbeddingModelName || "";
     document.getElementById("charFitMessagesMethod").value = row.fitMessagesInContextMethod || "";
+    document.getElementById("charAutoGenerateMemories").value = row.autoGenerateMemories || "";
+
+    // ADVANCED: AVATAR & SCENE
+    const avatar = row.avatar || {};
+    document.getElementById("charAvatarUrl").value = avatar.url || "";
+    document.getElementById("charAvatarSize").value = avatar.size ?? "";
+    document.getElementById("charAvatarShape").value = avatar.shape || "";
+
+    const scene = row.scene || {};
+    const background = scene.background || {};
+    const music = scene.music || {};
+    document.getElementById("charSceneBackgroundUrl").value = background.url || "";
+    document.getElementById("charSceneMusicUrl").value = music.url || "";
+
+    // ADVANCED: META & FLAGS
+    document.getElementById("charMetaTitle").value = row.metaTitle || "";
+    document.getElementById("charMetaDescription").value = row.metaDescription || "";
+    document.getElementById("charMetaImage").value = row.metaImage || "";
+
+    const streaming = row.streamingResponse;
+    document.getElementById("charStreamingResponse").value =
+        streaming === false ? "false" : "true";
+
+    document.getElementById("charFolderPath").value = row.folderPath || "";
+
+    document.getElementById("profileStatus").textContent =
+        `Loaded character ${index + 1}.`;
+}
+
+// APPLY CHANGES BACK INTO charactersRows
+function applyChangesToCurrentCharacter() {
+    if (!perchanceData || charactersRows.length === 0) {
+        alert("No export or characters loaded.");
+        return;
+    }
+
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) {
+        alert("Selected character not found.");
+        return;
+    }
+
+    // BASIC
+    row.name = document.getElementById("charName").value;
+    row.roleInstruction = document.getElementById("charRoleInstructions").value;
+    row.reminderMessage = document.getElementById("charReminder").value;
+    row.generalWritingInstructions = document.getElementById("charGeneralWriting").value;
+
+    const greeting = document.getElementById("charGreeting").value;
+    if (!Array.isArray(row.initialMessages)) {
+        row.initialMessages = [];
+    }
+    if (!row.initialMessages[0]) {
+        row.initialMessages[0] = { role: "assistant", content: "" };
+    }
+    row.initialMessages[0].content = greeting;
+
+    // ADVANCED: MESSAGE & PROMPTS
+    row.messageWrapperStyle = document.getElementById("charMessageWrapperStyle").value;
+    row.imagePromptPrefix = document.getElementById("charImagePromptPrefix").value;
+    row.imagePromptSuffix = document.getElementById("charImagePromptSuffix").value;
+    row.imagePromptTriggers = document.getElementById("charImagePromptTriggers").value;
+    row.messageInputPlaceholder = document.getElementById("charMessageInputPlaceholder").value;
+
+    // ADVANCED: MODEL & TOKENS
+    row.modelName = document.getElementById("charModelName").value;
+    const tempVal = document.getElementById("charTemperature").value;
+    if (tempVal !== "") row.temperature = parseFloat(tempVal);
+
+    const maxTokensVal = document.getElementById("charMaxTokensPerMessage").value;
+    if (maxTokensVal !== "") row.maxTokensPerMessage = parseInt(maxTokensVal, 10);
+
+    row.textEmbeddingModelName = document.getElementById("charTextEmbeddingModelName").value;
+    row.fitMessagesInContextMethod = document.getElementById("charFitMessagesMethod").value;
+    row.autoGenerateMemories = document.getElementById("charAutoGenerateMemories").value;
+
+    // ADVANCED: AVATAR & SCENE
+    if (!row.avatar) row.avatar = {};
+    row.avatar.url = document.getElementById("charAvatarUrl").value;
+    const avatarSizeVal = document.getElementById("charAvatarSize").value;
+    if (avatarSizeVal !== "") row.avatar.size = parseInt(avatarSizeVal, 10);
+    row.avatar.shape = document.getElementById("charAvatarShape").value;
+
+    if (!row.scene) row.scene = {};
+    if (!row.scene.background) row.scene.background = {};
+    if (!row.scene.music) row.scene.music = {};
+    row.scene.background.url = document.getElementById("charSceneBackgroundUrl").value;
+    row.scene.music.url = document.getElementById("charSceneMusicUrl").value;
+
+    // ADVANCED: META & FLAGS
+    row.metaTitle = document.getElementById("charMetaTitle").value;
+    row.metaDescription = document.getElementById("charMetaDescription").value;
+    row.metaImage = document.getElementById("charMetaImage").value;
+
+    const streamingValue = document.getElementById("charStreamingResponse").value;
+    row.streamingResponse = (streamingValue === "false") ? false : true;
+
+    row.folderPath = document.getElementById("charFolderPath").value;
+
+    document.getElementById("profileStatus").textContent =
+        `Changes applied to character ${currentCharacterIndex + 1}.`;
+}
+
+// DOWNLOAD UPDATED EXPORT (.json.gz)
+function downloadUpdatedExport() {
+    if (!perchanceData) {
+        alert("No export loaded.");
+        return;
+    }
+
+    try {
+        const jsonString = JSON.stringify(perchanceData);
+        const gzipped = pako.gzip(jsonString);
+
+        const blob = new Blob([gzipped], { type: "application/gzip" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "updated_export.json.gz";
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        document.getElementById("importStatus").textContent =
+            "Updated export downloaded.";
+    } catch (err) {
+        console.error("Error generating updated export:", err);
+        alert("Error generating updated export.");
+    }
+}
+
+// TOP BAR BUTTONS
+document.getElementById("applyChangesBtnTop").addEventListener("click", () => {
+    applyChangesToCurrentCharacter();
+});
+
+document.getElementById("downloadUpdatedBtnTop").addEventListener("click", () => {
+    downloadUpdatedExport();
+});
+
