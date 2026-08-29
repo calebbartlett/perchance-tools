@@ -1,5 +1,11 @@
 /************************************************************
- *  SMARHAMR — EDITOR.JS (FULLY PATCHED)
+ *  SMARHAMR — EDITOR.JS (MATCHING NEW INDEX.HTML)
+ *  - Profiles tab (character editor)
+ *  - Lore tab (world lore template + save)
+ *  - Memory tab placeholder (none yet)
+ *  - Dexie viewer (raw/pretty JSON)
+ *  - Scrubber in top bar
+ *  - No World Engine
  ************************************************************/
 
 // Global Perchance export object
@@ -13,170 +19,6 @@ let prettyJsonLines = [];
 // Character rows extracted from Dexie
 let charactersRows = [];
 let currentCharacterIndex = 0;
-
-// Canonical lore entry title
-const WORLD_LORE_TITLE = "WorldEngine by SmarHamr";
-
-// Canonical tags
-const WORLD_TAG_START = "<SmarHamrWorldEngineSTART>";
-const WORLD_TAG_END   = "<SmarHamrWorldEngineEND>";
-
-// In-memory world object (never stored in JSON)
-let worldObj = null;
-
-/************************************************************
- *  DEFAULT WORLD OBJECT
- ************************************************************/
-function defaultWorldObject() {
-    return {
-        state: {
-            stability: 0.5,
-            tension: 0.5,
-            mystery: 0.5,
-            techLevel: 0.5,
-            magicLevel: 0.5,
-            socialCohesion: 0.5,
-            environmentalHealth: 0.5,
-            narrativeMomentum: 0.5
-        },
-        rules: {
-            growth: [],
-            influence: [],
-            feedback: []
-        },
-        history: [],
-        url: "(none)"   // URL signature placeholder
-    };
-}
-
-/************************************************************
- *  GENERATE WORLD ENGINE TEXT BLOCK (compact + ALL CAPS)
- ************************************************************/
-function generateWorldEngineText(world) {
-    const lines = [];
-
-    lines.push(WORLD_TAG_START);
-
-    // STATE
-    lines.push("STATE:");
-    lines.push(`stability: ${world.state.stability.toFixed(2)}`);
-    lines.push(`tension: ${world.state.tension.toFixed(2)}`);
-    lines.push(`mystery: ${world.state.mystery.toFixed(2)}`);
-    lines.push(`techLevel: ${world.state.techLevel.toFixed(2)}`);
-    lines.push(`magicLevel: ${world.state.magicLevel.toFixed(2)}`);
-    lines.push(`socialCohesion: ${world.state.socialCohesion.toFixed(2)}`);
-    lines.push(`environmentalHealth: ${world.state.environmentalHealth.toFixed(2)}`);
-    lines.push(`narrativeMomentum: ${world.state.narrativeMomentum.toFixed(2)}`);
-
-    // RULES
-    lines.push("RULES:");
-
-    lines.push("GROWTH:");
-    world.rules.growth.forEach(rule => lines.push(`- ${rule}`));
-
-    lines.push("INFLUENCE:");
-    world.rules.influence.forEach(rule => lines.push(`- ${rule}`));
-
-    lines.push("FEEDBACK:");
-    world.rules.feedback.forEach(rule => lines.push(`- ${rule}`));
-
-    // HISTORY
-    lines.push("HISTORY:");
-    world.history.forEach(entry => lines.push(`- ${entry}`));
-
-    // URL signature
-    lines.push("URL:");
-    lines.push(world.url || "(none)");
-
-    lines.push(WORLD_TAG_END);
-
-    return lines.join("\n");
-}
-
-/************************************************************
- *  PARSE WORLD ENGINE TEXT BLOCK
- ************************************************************/
-function parseWorldEngineText(text) {
-    const world = defaultWorldObject();
-
-    if (!text || typeof text !== "string") {
-        return world;
-    }
-
-    const startIndex = text.indexOf(WORLD_TAG_START);
-    const endIndex   = text.indexOf(WORLD_TAG_END);
-
-    if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
-        return world;
-    }
-
-    const block = text.substring(
-        startIndex + WORLD_TAG_START.length,
-        endIndex
-    ).trim();
-
-    const lines = block.split("\n").map(l => l.trim());
-
-    let section = null;
-    let ruleSection = null;
-
-    for (const line of lines) {
-        if (line === "STATE:") {
-            section = "STATE";
-            continue;
-        }
-        if (line === "RULES:") {
-            section = "RULES";
-            continue;
-        }
-        if (line === "GROWTH:") {
-            section = "RULES";
-            ruleSection = "growth";
-            continue;
-        }
-        if (line === "INFLUENCE:") {
-            section = "RULES";
-            ruleSection = "influence";
-            continue;
-        }
-        if (line === "FEEDBACK:") {
-            section = "RULES";
-            ruleSection = "feedback";
-            continue;
-        }
-        if (line === "HISTORY:") {
-            section = "HISTORY";
-            continue;
-        }
-        if (line === "URL:") {
-            section = "URL";
-            continue;
-        }
-
-        if (section === "STATE") {
-            const [key, val] = line.split(":").map(s => s.trim());
-            if (key && val && !isNaN(parseFloat(val))) {
-                world.state[key] = parseFloat(val);
-            }
-        } else if (section === "RULES" && ruleSection) {
-            if (line.startsWith("- ")) {
-                const rule = line.substring(2).trim();
-                world.rules[ruleSection].push(rule);
-            }
-        } else if (section === "HISTORY") {
-            if (line.startsWith("- ")) {
-                const entry = line.substring(2).trim();
-                world.history.push(entry);
-            }
-        } else if (section === "URL") {
-            if (line.length > 0) {
-                world.url = line;
-            }
-        }
-    }
-
-    return world;
-}
 
 /************************************************************
  *  IMPORT HANDLER — LOAD .json OR .json.gz
@@ -212,8 +54,8 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
             loadCharacterIntoEditor(0);
         }
 
-        loadWorldFromLore();
-        loadWorldIntoUI();
+        // Optionally load existing lore into Lore tab
+        loadLoreIntoEditor();
 
     } catch (err) {
         console.error("Error loading export:", err);
@@ -222,7 +64,7 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 });
 
 /************************************************************
- *  JSON VIEWER BUTTONS
+ *  JSON VIEWER BUTTONS (Dexie Viewer tab)
  ************************************************************/
 document.getElementById("showRawBtn").addEventListener("click", () => {
     document.getElementById("jsonViewer").textContent =
@@ -305,7 +147,7 @@ function populateCharacterDropdown() {
 }
 
 /************************************************************
- *  LOAD CHARACTER INTO EDITOR
+ *  LOAD CHARACTER INTO EDITOR (Profiles tab)
  ************************************************************/
 function loadCharacterIntoEditor(index) {
     const row = charactersRows[index];
@@ -473,8 +315,46 @@ const downloadBtnTop = document.getElementById("downloadUpdatedBtnTop");
 const scrubBtnTop = document.getElementById("scrubBtnTop");
 
 /************************************************************
- *  LORE TABLE HANDLING — FIND / CREATE
+ *  LORE TAB — TEMPLATE + SAVE
  ************************************************************/
+function generateWorldLoreTemplate() {
+    const template = `
+World Overview
+--------------
+A concise description of the world’s tone, themes, and general nature.
+
+Geography & Environment
+-----------------------
+Key regions, climates, natural features, and environmental conditions.
+
+Cultures & Societies
+--------------------
+Major civilizations, cultural traits, social structures, and traditions.
+
+Technology & Magic
+------------------
+The level of technology, magical systems, and how they interact.
+
+Factions & Power Structures
+---------------------------
+Important groups, governments, alliances, and conflicts.
+
+History & Timeline
+------------------
+Major historical events, turning points, and eras.
+
+Current State of the World
+--------------------------
+What is happening right now? Tensions, mysteries, opportunities.
+
+Notes
+-----
+Any additional details or meta information.
+`.trim();
+
+    document.getElementById("loreEditor").value = template;
+}
+
 function ensureLoreTable() {
     if (!perchanceData) return null;
 
@@ -496,82 +376,51 @@ function ensureLoreTable() {
     return loreTable;
 }
 
-/************************************************************
- *  FIND WORLD ENGINE LORE ROW
- ************************************************************/
-function findWorldLoreRow() {
+function loadLoreIntoEditor() {
+    if (!perchanceData) return;
+
     const loreTable = ensureLoreTable();
-    if (!loreTable) return { row: null, table: null };
+    if (!loreTable) return;
 
-    const row = loreTable.rows.find(r => {
-        const title = r.title ?? r.name ?? "";
-        return title === WORLD_LORE_TITLE;
-    });
+    const row = loreTable.rows.find(r => r.name === "World Lore");
+    if (!row) return;
 
-    return { row: row || null, table: loreTable };
+    const loreText = row.content ?? row.body ?? row.text ?? "";
+    const el = document.getElementById("loreEditor");
+    if (el) el.value = loreText;
 }
 
-/************************************************************
- *  LOAD WORLD ENGINE FROM LORE
- ************************************************************/
-function loadWorldFromLore() {
-    worldObj = defaultWorldObject();
-
-    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
-        return;
-    }
-
-    const { row } = findWorldLoreRow();
-    if (!row) {
-        return;
-    }
-
-    const content = row.content ?? row.body ?? row.text ?? "";
-    if (!content || typeof content !== "string") return;
-
-    try {
-        const parsed = parseWorldEngineText(content);
-        worldObj = parsed;
-    } catch (err) {
-        console.warn("WorldEngine block could not be parsed:", err);
-    }
-}
-
-/************************************************************
- *  SAVE WORLD ENGINE INTO LORE (PATCHED WITH embeddings:{})
- ************************************************************/
-function saveWorldToLore() {
+function saveLoreToPerchance() {
     if (!perchanceData) {
-        console.warn("No perchanceData available; cannot save world to lore.");
+        alert("No export loaded.");
         return;
     }
 
-    // Ensure history is clean strings
-    if (!worldObj) worldObj = defaultWorldObject();
-    worldObj.history = (worldObj.history || []).filter(h => typeof h === "string");
+    const loreText = document.getElementById("loreEditor").value;
 
-    const { row, table } = findWorldLoreRow();
-    const serialized = generateWorldEngineText(worldObj);
-
-    if (row) {
-        // Update existing row
-        if ("content" in row) row.content = serialized;
-        else if ("body" in row) row.body = serialized;
-        else if ("text" in row) row.text = serialized;
-        else row.content = serialized;
-
-        // PATCH: Ensure embeddings exist
-        if (!row.embeddings) row.embeddings = {};
-    } else {
-        // Create new row — PATCHED
-        const newRow = {
-            id: `worldengine-${Date.now()}`,
-            title: WORLD_LORE_TITLE,
-            content: serialized,
-            embeddings: {}   // REQUIRED FOR PERCHANCE IMPORT
-        };
-        table.rows.push(newRow);
+    const loreTable = ensureLoreTable();
+    if (!loreTable) {
+        alert("Could not ensure lore table.");
+        return;
     }
+
+    let row = loreTable.rows.find(r => r.name === "World Lore");
+    if (!row) {
+        row = {
+            id: `world-lore-${Date.now()}`,
+            name: "World Lore",
+            content: loreText,
+            embeddings: {},
+            tags: []
+        };
+        loreTable.rows.push(row);
+    } else {
+        row.content = loreText;
+        if (!row.embeddings) row.embeddings = {};
+        if (!row.tags) row.tags = [];
+    }
+
+    alert("Lore saved.");
 }
 
 /************************************************************
@@ -584,8 +433,6 @@ function downloadUpdatedExport() {
     }
 
     try {
-        saveWorldToLore();
-
         const now = new Date();
         const timestamp =
             now.getFullYear().toString() +
@@ -636,242 +483,6 @@ if (scrubBtnTop) {
 }
 
 /************************************************************
- *  WORLD ENGINE — UI WIRING + REFLECTION + RULES + HISTORY
- ************************************************************/
-function clamp01(v) {
-    if (v < 0) return 0;
-    if (v > 1) return 1;
-    return v;
-}
-
-function setSlider(sliderId, labelId, value) {
-    const slider = document.getElementById(sliderId);
-    const label = document.getElementById(labelId);
-    if (!slider || !label) return;
-
-    slider.value = value;
-    label.textContent = parseFloat(value).toFixed(2);
-
-    const newSlider = slider.cloneNode(true);
-    slider.parentNode.replaceChild(newSlider, slider);
-
-    newSlider.addEventListener("input", () => {
-        label.textContent = parseFloat(newSlider.value).toFixed(2);
-        saveWorldStateFromUI();
-        updateWorldSummary();
-    });
-}
-
-function loadWorldIntoUI() {
-    if (!worldObj) loadWorldFromLore();
-    if (!worldObj) worldObj = defaultWorldObject();
-
-    const s = worldObj.state;
-
-    setSlider("worldStability", "worldStabilityVal", s.stability);
-    setSlider("worldTension", "worldTensionVal", s.tension);
-    setSlider("worldMystery", "worldMysteryVal", s.mystery);
-    setSlider("worldTechLevel", "worldTechLevelVal", s.techLevel);
-    setSlider("worldMagicLevel", "worldMagicLevelVal", s.magicLevel);
-    setSlider("worldSocialCohesion", "worldSocialCohesionVal", s.socialCohesion);
-    setSlider("worldEnvironmentalHealth", "worldEnvironmentalHealthVal", s.environmentalHealth);
-    setSlider("worldNarrativeMomentum", "worldNarrativeMomentumVal", s.narrativeMomentum);
-
-    const growthEl = document.getElementById("worldGrowthRules");
-    const influenceEl = document.getElementById("worldInfluenceRules");
-    const feedbackEl = document.getElementById("worldFeedbackRules");
-    const historyEl = document.getElementById("worldHistory");
-
-    if (growthEl) growthEl.value = (worldObj.rules.growth || []).join("\n");
-    if (influenceEl) influenceEl.value = (worldObj.rules.influence || []).join("\n");
-    if (feedbackEl) feedbackEl.value = (worldObj.rules.feedback || []).join("\n");
-    if (historyEl) historyEl.value = (worldObj.history || []).join("\n");
-
-    updateWorldSummary();
-}
-
-function saveWorldStateFromUI() {
-    if (!worldObj) worldObj = defaultWorldObject();
-
-    const getVal = (id) => {
-        const el = document.getElementById(id);
-        return el ? parseFloat(el.value) : 0.5;
-    };
-
-    const s = worldObj.state;
-
-    s.stability = clamp01(getVal("worldStability"));
-    s.tension = clamp01(getVal("worldTension"));
-    s.mystery = clamp01(getVal("worldMystery"));
-    s.techLevel = clamp01(getVal("worldTechLevel"));
-    s.magicLevel = clamp01(getVal("worldMagicLevel"));
-    s.socialCohesion = clamp01(getVal("worldSocialCohesion"));
-    s.environmentalHealth = clamp01(getVal("worldEnvironmentalHealth"));
-    s.narrativeMomentum = clamp01(getVal("worldNarrativeMomentum"));
-}
-
-function describeLevel(v) {
-    if (v < 0.2) return "very low";
-    if (v < 0.4) return "low";
-    if (v < 0.6) return "medium";
-    if (v < 0.8) return "high";
-    return "very high";
-}
-
-function updateWorldSummary() {
-    if (!worldObj || !worldObj.state) return;
-
-    const s = worldObj.state;
-    const summaryLines = [];
-
-    summaryLines.push(`Stability: ${s.stability.toFixed(2)} (${describeLevel(s.stability)})`);
-    summaryLines.push(`Tension: ${s.tension.toFixed(2)} (${describeLevel(s.tension)})`);
-    summaryLines.push(`Mystery: ${s.mystery.toFixed(2)} (${describeLevel(s.mystery)})`);
-    summaryLines.push(`Tech Level: ${s.techLevel.toFixed(2)} (${describeLevel(s.techLevel)})`);
-    summaryLines.push(`Magic Level: ${s.magicLevel.toFixed(2)} (${describeLevel(s.magicLevel)})`);
-    summaryLines.push(`Social Cohesion: ${s.socialCohesion.toFixed(2)} (${describeLevel(s.socialCohesion)})`);
-    summaryLines.push(`Environmental Health: ${s.environmentalHealth.toFixed(2)} (${describeLevel(s.environmentalHealth)})`);
-    summaryLines.push(`Narrative Momentum: ${s.narrativeMomentum.toFixed(2)} (${describeLevel(s.narrativeMomentum)})`);
-
-    const el = document.getElementById("worldSummary");
-    if (el) el.textContent = summaryLines.join(" | ");
-}
-
-function getSimpleTimestamp() {
-    const now = new Date();
-    return (
-        now.getFullYear().toString() +
-        String(now.getMonth() + 1).padStart(2, "0") +
-        String(now.getDate()).padStart(2, "0") +
-        String(now.getHours()).padStart(2, "0") +
-        String(now.getMinutes()).padStart(2, "0")
-    );
-}
-
-function reflectWorld() {
-    if (!worldObj) worldObj = defaultWorldObject();
-
-    const s = worldObj.state;
-    const history = worldObj.history;
-
-    const timestamp = getSimpleTimestamp();
-    const notes = [];
-
-    if (s.tension > 0.7 && s.socialCohesion < 0.4) {
-        s.stability = clamp01(s.stability - 0.05);
-        notes.push("High tension + low cohesion → stability decreased.");
-    }
-
-    if (s.techLevel > 0.8) {
-        s.mystery = clamp01(s.mystery - 0.05);
-        notes.push("High tech → mystery decreased.");
-    }
-
-    if (s.magicLevel > 0.8 && s.techLevel < 0.3) {
-        s.mystery = clamp01(s.mystery + 0.05);
-        notes.push("High magic + low tech → mystery increased.");
-    }
-
-    if (notes.length > 0) {
-        history.push(`${timestamp}: world reflection → ${notes.join(" ")}`);
-    } else {
-        history.push(`${timestamp}: world reflection → no significant changes.`);
-    }
-
-    const historyEl = document.getElementById("worldHistory");
-    if (historyEl) historyEl.value = history.join("\n");
-
-    saveWorldToLore();
-    updateWorldSummary();
-}
-
-function resetWorldState() {
-    worldObj = defaultWorldObject();
-
-    loadWorldIntoUI();
-
-    const timestamp = getSimpleTimestamp();
-    worldObj.history.push(`${timestamp}: world state reset to neutral.`);
-
-    const historyEl = document.getElementById("worldHistory");
-    if (historyEl) historyEl.value = worldObj.history.join("\n");
-
-    saveWorldToLore();
-}
-
-function applyWorldRulesFromUI() {
-    if (!worldObj) worldObj = defaultWorldObject();
-
-    const growthText = document.getElementById("worldGrowthRules")?.value || "";
-    const influenceText = document.getElementById("worldInfluenceRules")?.value || "";
-    const feedbackText = document.getElementById("worldFeedbackRules")?.value || "";
-
-    worldObj.rules.growth = growthText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-    worldObj.rules.influence = influenceText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-    worldObj.rules.feedback = feedbackText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-
-    const timestamp = getSimpleTimestamp();
-    worldObj.history.push(`${timestamp}: world rules updated.`);
-
-    const historyEl = document.getElementById("worldHistory");
-    if (historyEl) historyEl.value = worldObj.history.join("\n");
-
-    saveWorldToLore();
-}
-
-/************************************************************
- *  WORLD TAB BUTTON WIRING
- ************************************************************/
-document.addEventListener("DOMContentLoaded", () => {
-    const reflectBtn = document.getElementById("worldReflectBtn");
-    if (reflectBtn) {
-        reflectBtn.addEventListener("click", () => {
-            reflectWorld();
-        });
-    }
-
-    const resetBtn = document.getElementById("worldResetBtn");
-    if (resetBtn) {
-        resetBtn.addEventListener("click", () => {
-            resetWorldState();
-        });
-    }
-
-    const applyRulesBtn = document.getElementById("worldApplyRulesBtn");
-    if (applyRulesBtn) {
-        applyRulesBtn.addEventListener("click", () => {
-            applyWorldRulesFromUI();
-        });
-    }
-
-    const advToggle = document.getElementById("worldAdvancedToggle");
-    const advPanel = document.getElementById("worldAdvancedPanel");
-    if (advToggle && advPanel) {
-        advToggle.addEventListener("change", () => {
-            advPanel.style.display = advToggle.checked ? "block" : "none";
-        });
-    }
-});
-
-/************************************************************
- *  TAB SWITCHING — ENSURE WORLD UI LOADS
- ************************************************************/
-document.addEventListener("DOMContentLoaded", () => {
-    const tabs = document.querySelectorAll(".tab-button");
-
-    tabs.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const tab = btn.dataset.tab;
-
-            if (tab === "world") {
-                loadWorldFromLore();
-                loadWorldIntoUI();
-            }
-        });
-    });
-});
-
-/************************************************************
  *  SCRUBBER INTEGRATION
  ************************************************************/
 const processBtn = document.getElementById("processBtn");
@@ -903,8 +514,7 @@ if (processBtn) {
                 loadCharacterIntoEditor(0);
             }
 
-            loadWorldFromLore();
-            loadWorldIntoUI();
+            loadLoreIntoEditor();
 
             document.getElementById("status").textContent = "Scrub complete.";
         } catch (err) {
@@ -915,28 +525,25 @@ if (processBtn) {
 }
 
 /************************************************************
- *  SAFETY CHECKS — ENSURE WORLD ENGINE ALWAYS EXISTS
- ************************************************************/
-function ensureWorldEngineExists() {
-    const { row } = findWorldLoreRow();
-    if (!row) {
-        worldObj = defaultWorldObject();
-        saveWorldToLore();
-    }
-}
-
-/************************************************************
- *  INITIALIZATION AFTER IMPORT (if any)
+ *  LORE TAB BUTTON WIRING
  ************************************************************/
 document.addEventListener("DOMContentLoaded", () => {
-    if (perchanceData) {
-        ensureWorldEngineExists();
-        loadWorldFromLore();
-        loadWorldIntoUI();
+    const genBtn = document.getElementById("generateLoreTemplateBtn");
+    if (genBtn) {
+        genBtn.addEventListener("click", () => {
+            generateWorldLoreTemplate();
+        });
+    }
+
+    const saveLoreBtn = document.getElementById("saveLoreBtn");
+    if (saveLoreBtn) {
+        saveLoreBtn.addEventListener("click", () => {
+            saveLoreToPerchance();
+        });
     }
 });
 
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js fully loaded.");
+console.log("SmarHamr editor.js (Lore version) fully loaded.");
