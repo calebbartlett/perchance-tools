@@ -486,3 +486,352 @@ if (downloadBtnTop) {
         downloadUpdatedExport();
     });
 }
+
+/************************************************************
+ *  WORLD ENGINE — UI WIRING + REFLECTION + RULES + HISTORY
+ ************************************************************/
+
+/************************************************************
+ *  CLAMP UTILITY
+ ************************************************************/
+function clamp01(v) {
+    if (v < 0) return 0;
+    if (v > 1) return 1;
+    return v;
+}
+
+/************************************************************
+ *  UPDATE SLIDER + LABEL
+ ************************************************************/
+function setSlider(sliderId, labelId, value) {
+    const slider = document.getElementById(sliderId);
+    const label = document.getElementById(labelId);
+    if (!slider || !label) return;
+
+    slider.value = value;
+    label.textContent = parseFloat(value).toFixed(2);
+
+    // Remove previous listener by cloning node
+    const newSlider = slider.cloneNode(true);
+    slider.parentNode.replaceChild(newSlider, slider);
+
+    newSlider.addEventListener("input", () => {
+        label.textContent = parseFloat(newSlider.value).toFixed(2);
+        saveWorldStateFromUI();
+        updateWorldSummary();
+    });
+}
+
+/************************************************************
+ *  LOAD WORLD INTO UI
+ ************************************************************/
+function loadWorldIntoUI() {
+    if (!worldObj) loadWorldFromLore();
+    if (!worldObj) worldObj = defaultWorldObject();
+
+    const s = worldObj.state;
+
+    setSlider("worldStability", "worldStabilityVal", s.stability);
+    setSlider("worldTension", "worldTensionVal", s.tension);
+    setSlider("worldMystery", "worldMysteryVal", s.mystery);
+    setSlider("worldTechLevel", "worldTechLevelVal", s.techLevel);
+    setSlider("worldMagicLevel", "worldMagicLevelVal", s.magicLevel);
+    setSlider("worldSocialCohesion", "worldSocialCohesionVal", s.socialCohesion);
+    setSlider("worldEnvironmentalHealth", "worldEnvironmentalHealthVal", s.environmentalHealth);
+    setSlider("worldNarrativeMomentum", "worldNarrativeMomentumVal", s.narrativeMomentum);
+
+    const growthEl = document.getElementById("worldGrowthRules");
+    const influenceEl = document.getElementById("worldInfluenceRules");
+    const feedbackEl = document.getElementById("worldFeedbackRules");
+    const historyEl = document.getElementById("worldHistory");
+
+    if (growthEl) growthEl.value = (worldObj.rules.growth || []).join("\n");
+    if (influenceEl) influenceEl.value = (worldObj.rules.influence || []).join("\n");
+    if (feedbackEl) feedbackEl.value = (worldObj.rules.feedback || []).join("\n");
+    if (historyEl) historyEl.value = (worldObj.history || []).join("\n");
+
+    updateWorldSummary();
+}
+
+/************************************************************
+ *  SAVE WORLD STATE FROM UI (sliders → worldObj)
+ ************************************************************/
+function saveWorldStateFromUI() {
+    if (!worldObj) worldObj = defaultWorldObject();
+
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? parseFloat(el.value) : 0.5;
+    };
+
+    const s = worldObj.state;
+
+    s.stability = clamp01(getVal("worldStability"));
+    s.tension = clamp01(getVal("worldTension"));
+    s.mystery = clamp01(getVal("worldMystery"));
+    s.techLevel = clamp01(getVal("worldTechLevel"));
+    s.magicLevel = clamp01(getVal("worldMagicLevel"));
+    s.socialCohesion = clamp01(getVal("worldSocialCohesion"));
+    s.environmentalHealth = clamp01(getVal("worldEnvironmentalHealth"));
+    s.narrativeMomentum = clamp01(getVal("worldNarrativeMomentum"));
+}
+
+/************************************************************
+ *  DESCRIBE LEVEL (for summary)
+ ************************************************************/
+function describeLevel(v) {
+    if (v < 0.2) return "very low";
+    if (v < 0.4) return "low";
+    if (v < 0.6) return "medium";
+    if (v < 0.8) return "high";
+    return "very high";
+}
+
+/************************************************************
+ *  UPDATE WORLD SUMMARY
+ ************************************************************/
+function updateWorldSummary() {
+    if (!worldObj || !worldObj.state) return;
+
+    const s = worldObj.state;
+    const summaryLines = [];
+
+    summaryLines.push(`Stability: ${s.stability.toFixed(2)} (${describeLevel(s.stability)})`);
+    summaryLines.push(`Tension: ${s.tension.toFixed(2)} (${describeLevel(s.tension)})`);
+    summaryLines.push(`Mystery: ${s.mystery.toFixed(2)} (${describeLevel(s.mystery)})`);
+    summaryLines.push(`Tech Level: ${s.techLevel.toFixed(2)} (${describeLevel(s.techLevel)})`);
+    summaryLines.push(`Magic Level: ${s.magicLevel.toFixed(2)} (${describeLevel(s.magicLevel)})`);
+    summaryLines.push(`Social Cohesion: ${s.socialCohesion.toFixed(2)} (${describeLevel(s.socialCohesion)})`);
+    summaryLines.push(`Environmental Health: ${s.environmentalHealth.toFixed(2)} (${describeLevel(s.environmentalHealth)})`);
+    summaryLines.push(`Narrative Momentum: ${s.narrativeMomentum.toFixed(2)} (${describeLevel(s.narrativeMomentum)})`);
+
+    const el = document.getElementById("worldSummary");
+    if (el) el.textContent = summaryLines.join(" | ");
+}
+
+/************************************************************
+ *  SIMPLE TIMESTAMP (YYYYMMDDhhmm)
+ ************************************************************/
+function getSimpleTimestamp() {
+    const now = new Date();
+    return (
+        now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        String(now.getDate()).padStart(2, "0") +
+        String(now.getHours()).padStart(2, "0") +
+        String(now.getMinutes()).padStart(2, "0")
+    );
+}
+
+/************************************************************
+ *  WORLD REFLECTION ENGINE
+ ************************************************************/
+function reflectWorld() {
+    if (!worldObj) worldObj = defaultWorldObject();
+
+    const s = worldObj.state;
+    const history = worldObj.history;
+
+    const timestamp = getSimpleTimestamp();
+    const notes = [];
+
+    // Built-in reflection logic
+    if (s.tension > 0.7 && s.socialCohesion < 0.4) {
+        s.stability = clamp01(s.stability - 0.05);
+        notes.push("High tension + low cohesion → stability decreased.");
+    }
+
+    if (s.techLevel > 0.8) {
+        s.mystery = clamp01(s.mystery - 0.05);
+        notes.push("High tech → mystery decreased.");
+    }
+
+    if (s.magicLevel > 0.8 && s.techLevel < 0.3) {
+        s.mystery = clamp01(s.mystery + 0.05);
+        notes.push("High magic + low tech → mystery increased.");
+    }
+
+    if (notes.length > 0) {
+        history.push(`${timestamp}: world reflection → ${notes.join(" ")}`);
+    } else {
+        history.push(`${timestamp}: world reflection → no significant changes.`);
+    }
+
+    const historyEl = document.getElementById("worldHistory");
+    if (historyEl) historyEl.value = history.join("\n");
+
+    saveWorldToLore();
+    updateWorldSummary();
+}
+
+/************************************************************
+ *  RESET WORLD STATE
+ ************************************************************/
+function resetWorldState() {
+    worldObj = defaultWorldObject();
+
+    loadWorldIntoUI();
+
+    const timestamp = getSimpleTimestamp();
+    worldObj.history.push(`${timestamp}: world state reset to neutral.`);
+
+    const historyEl = document.getElementById("worldHistory");
+    if (historyEl) historyEl.value = worldObj.history.join("\n");
+
+    saveWorldToLore();
+}
+
+/************************************************************
+ *  APPLY WORLD RULES FROM UI
+ ************************************************************/
+function applyWorldRulesFromUI() {
+    if (!worldObj) worldObj = defaultWorldObject();
+
+    const growthText = document.getElementById("worldGrowthRules")?.value || "";
+    const influenceText = document.getElementById("worldInfluenceRules")?.value || "";
+    const feedbackText = document.getElementById("worldFeedbackRules")?.value || "";
+
+    worldObj.rules.growth = growthText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    worldObj.rules.influence = influenceText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    worldObj.rules.feedback = feedbackText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+    const timestamp = getSimpleTimestamp();
+    worldObj.history.push(`${timestamp}: world rules updated.`);
+
+    const historyEl = document.getElementById("worldHistory");
+    if (historyEl) historyEl.value = worldObj.history.join("\n");
+
+    saveWorldToLore();
+}
+
+/************************************************************
+ *  WORLD TAB BUTTON WIRING
+ ************************************************************/
+document.addEventListener("DOMContentLoaded", () => {
+    const reflectBtn = document.getElementById("worldReflectBtn");
+    if (reflectBtn) {
+        reflectBtn.addEventListener("click", () => {
+            reflectWorld();
+        });
+    }
+
+    const resetBtn = document.getElementById("worldResetBtn");
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            resetWorldState();
+        });
+    }
+
+    const applyRulesBtn = document.getElementById("worldApplyRulesBtn");
+    if (applyRulesBtn) {
+        applyRulesBtn.addEventListener("click", () => {
+            applyWorldRulesFromUI();
+        });
+    }
+
+    const advToggle = document.getElementById("worldAdvancedToggle");
+    const advPanel = document.getElementById("worldAdvancedPanel");
+    if (advToggle && advPanel) {
+        advToggle.addEventListener("change", () => {
+            advPanel.style.display = advToggle.checked ? "block" : "none";
+        });
+    }
+});
+
+/************************************************************
+ *  TAB SWITCHING (HTML already has basic logic)
+ *  This ensures world UI loads when switching to World tab.
+ ************************************************************/
+document.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".tab-button");
+
+    tabs.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tab = btn.dataset.tab;
+
+            if (tab === "world") {
+                // Load world from lore when entering the tab
+                loadWorldFromLore();
+                loadWorldIntoUI();
+            }
+        });
+    });
+});
+
+/************************************************************
+ *  SCRUBBER INTEGRATION
+ *  (scrubber.js handles the actual cleaning)
+ ************************************************************/
+const processBtn = document.getElementById("processBtn");
+if (processBtn) {
+    processBtn.addEventListener("click", () => {
+        if (!rawJsonText) {
+            alert("No file loaded.");
+            return;
+        }
+
+        try {
+            const result = scrubExport(rawJsonText);
+
+            document.getElementById("origSize").textContent = result.originalSize;
+            document.getElementById("cleanSize").textContent = result.cleanedSize;
+            document.getElementById("reduction").textContent = result.reductionPercent + "%";
+            document.getElementById("savedImagesCount").textContent = result.savedImagesRemoved;
+            document.getElementById("imageTagCount").textContent = result.imageTagsRemoved;
+
+            // Update viewer
+            document.getElementById("jsonViewer").textContent = result.cleanedJson;
+
+            // Replace perchanceData with cleaned version
+            perchanceData = JSON.parse(result.cleanedJson);
+            rawJsonText = result.cleanedJson;
+
+            // Re-extract characters
+            extractCharactersFromDexie();
+            populateCharacterDropdown();
+
+            if (charactersRows.length > 0) {
+                loadCharacterIntoEditor(0);
+            }
+
+            // Reload world engine
+            loadWorldFromLore();
+            loadWorldIntoUI();
+
+            document.getElementById("status").textContent = "Scrub complete.";
+        } catch (err) {
+            console.error("Scrub error:", err);
+            alert("Scrub failed.");
+        }
+    });
+}
+
+/************************************************************
+ *  SAFETY CHECKS — ENSURE WORLD ENGINE ALWAYS EXISTS
+ ************************************************************/
+function ensureWorldEngineExists() {
+    const { row, table } = findWorldLoreRow();
+    if (!row) {
+        // Create a new world engine block if missing
+        worldObj = defaultWorldObject();
+        saveWorldToLore();
+    }
+}
+
+/************************************************************
+ *  INITIALIZATION AFTER IMPORT
+ ************************************************************/
+document.addEventListener("DOMContentLoaded", () => {
+    // If a file is already loaded (rare), initialize world
+    if (perchanceData) {
+        ensureWorldEngineExists();
+        loadWorldFromLore();
+        loadWorldIntoUI();
+    }
+});
+
+/************************************************************
+ *  END OF FILE — SMARHAMR EDITOR.JS COMPLETE
+ ************************************************************/
+console.log("SmarHamr editor.js fully loaded.");
+
