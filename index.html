@@ -294,29 +294,36 @@
   <!-- TAB SWITCHING LOGIC -->
   <!-- ========================= -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const buttons = document.querySelectorAll('.tab-button');
-      const panels = document.querySelectorAll('.tab-panel');
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('.tab-button');
+  const panels = document.querySelectorAll('.tab-panel');
 
-      buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          // deactivate all buttons
-          buttons.forEach(b => b.classList.remove('active'));
-          // activate clicked button
-          btn.classList.add('active');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
 
-          const tab = btn.dataset.tab;
+      // deactivate all buttons
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-          // hide all panels
-          panels.forEach(panel => panel.classList.remove('active'));
+      const tab = btn.dataset.tab;
 
-          // show selected panel
-          const activePanel = document.getElementById(tab);
-          if (activePanel) activePanel.classList.add('active');
-        });
-      });
+      // hide all panels
+      panels.forEach(panel => panel.classList.remove('active'));
+
+      // show selected panel
+      const activePanel = document.getElementById(tab);
+      if (activePanel) activePanel.classList.add('active');
+
+      // ⭐ NEW: load character lore when switching to Lore tab
+      if (tab === "lore") {
+        loadCharacterLoreIntoEditor();
+      }
     });
-  </script>
+  });
+});
+</script>
+
+  
 
 </body>
 </html>
