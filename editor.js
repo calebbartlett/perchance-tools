@@ -218,6 +218,7 @@ function applyChangesToCurrentCharacter() {
 
     // ADVANCED: MODEL & TOKENS
     row.modelName = document.getElementById("charModelName").value;
+
     const tempVal = document.getElementById("charTemperature").value;
     if (tempVal !== "") row.temperature = parseFloat(tempVal);
 
@@ -231,13 +232,16 @@ function applyChangesToCurrentCharacter() {
     // ADVANCED: AVATAR & SCENE
     if (!row.avatar) row.avatar = {};
     row.avatar.url = document.getElementById("charAvatarUrl").value;
+
     const avatarSizeVal = document.getElementById("charAvatarSize").value;
     if (avatarSizeVal !== "") row.avatar.size = parseInt(avatarSizeVal, 10);
+
     row.avatar.shape = document.getElementById("charAvatarShape").value;
 
     if (!row.scene) row.scene = {};
     if (!row.scene.background) row.scene.background = {};
     if (!row.scene.music) row.scene.music = {};
+
     row.scene.background.url = document.getElementById("charSceneBackgroundUrl").value;
     row.scene.music.url = document.getElementById("charSceneMusicUrl").value;
 
@@ -263,6 +267,14 @@ function downloadUpdatedExport() {
     }
 
     try {
+        // Add timestamp inside JSON
+        if (!perchanceData.meta) perchanceData.meta = {};
+        const timestamp = new Date().toISOString();
+        perchanceData.meta.exportTimestamp = timestamp;
+
+        // Add timestamp to filename
+        const safeTimestamp = timestamp.replace(/[:.]/g, "-");
+
         const jsonString = JSON.stringify(perchanceData);
         const gzipped = pako.gzip(jsonString);
 
@@ -271,13 +283,13 @@ function downloadUpdatedExport() {
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = "updated_export.json.gz";
+        a.download = `updated_export_${safeTimestamp}.json.gz`;
         a.click();
 
         URL.revokeObjectURL(url);
 
         document.getElementById("importStatus").textContent =
-            "Updated export downloaded.";
+            "Export complete.";
     } catch (err) {
         console.error("Error generating updated export:", err);
         alert("Error generating updated export.");
@@ -293,3 +305,8 @@ document.getElementById("downloadUpdatedBtnTop").addEventListener("click", () =>
     downloadUpdatedExport();
 });
 
+// SCRUB BUTTON (top bar)
+document.getElementById("scrubBtnTop").addEventListener("click", () => {
+    const btn = document.getElementById("processBtn");
+    if (btn) btn.click();
+});
