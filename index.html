@@ -14,7 +14,7 @@
     h1 {
       margin-bottom: 0.5rem;
     }
- 
+
     #importBar {
       display: flex;
       align-items: center;
@@ -109,9 +109,14 @@
 
   <h1>Perchance Tools</h1>
 
+  <!-- GLOBAL ACTION BAR -->
   <div id="importBar">
     <label><strong>Load Perchance Export:</strong></label>
     <input type="file" id="fileInput" accept=".gz,.json,.json.gz">
+
+    <button id="applyChangesBtnTop">Apply Changes</button>
+    <button id="downloadUpdatedBtnTop">Export Updated</button>
+
     <span id="importStatus">No file loaded</span>
   </div>
 
@@ -308,7 +313,6 @@
           </label>
         </div>
 
-        <button id="applyChangesBtn">Apply Changes to Selected Character</button>
         <div id="profileStatus"></div>
 
       </div>
@@ -365,10 +369,6 @@
         <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
       </div>
 
-      <div class="box">
-        <h3>Download Updated Export</h3>
-        <button id="downloadUpdatedBtn">Download Updated .json.gz</button>
-      </div>
     </div>
 
   </div>
@@ -396,4 +396,3 @@
 
 </body>
 </html>
-
