@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const activePanel = document.getElementById(tab);
       if (activePanel) activePanel.classList.add('active');
 
-      // ⭐ NEW: load character lore when switching to Lore tab
+      // ⭐ CRITICAL FIX: load character lore when switching to Lore tab
       if (tab === "lore") {
         loadCharacterLoreIntoEditor();
       }
@@ -323,7 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-  
 
 </body>
 </html>
