@@ -327,8 +327,8 @@
 
       <div class="section-box">
         <div class="section-title">
-          World State
-          <span class="advanced-label">(basic users: adjust sliders, advanced users: use rules)</span>
+          World State Generator
+          <span class="advanced-label">(stored in Lore as “WorldEngine by SmarHamr”)</span>
         </div>
 
         <label>
@@ -390,7 +390,7 @@
       <div class="section-box">
         <div class="section-title">
           World Rules
-          <span class="advanced-label">(toggle advanced mode to edit)</span>
+          <span class="advanced-label">(stored in Lore block)</span>
         </div>
 
         <label>
@@ -403,19 +403,19 @@
           <label>
             <strong>Growth Rules</strong><br>
             <textarea id="worldGrowthRules" rows="5"
-              placeholder="One rule per line, e.g.&#10;if tension > 0.7 && socialCohesion < 0.4: stability -= 0.05"></textarea>
+              placeholder="- if tension > 0.7 and socialCohesion < 0.4: stability -= 0.05"></textarea>
           </label>
 
           <label>
             <strong>World → Characters Influence Rules</strong><br>
             <textarea id="worldInfluenceRules" rows="5"
-              placeholder="One rule per line, e.g.&#10;if stability < 0.3: characters[*].toneBias = 'cautious'"></textarea>
+              placeholder="- if stability < 0.3: characters[*].toneBias = cautious"></textarea>
           </label>
 
           <label>
             <strong>Characters → World Feedback Rules</strong><br>
             <textarea id="worldFeedbackRules" rows="5"
-              placeholder="One rule per line, e.g.&#10;if characters[*].confidence > 0.8: socialCohesion += 0.05"></textarea>
+              placeholder="- if characters[*].confidence > 0.8: socialCohesion += 0.05"></textarea>
           </label>
 
           <div style="margin-top: 0.75rem;">
@@ -427,7 +427,7 @@
       <div class="section-box">
         <div class="section-title">
           World History
-          <span class="advanced-label">(log of world reflections and changes)</span>
+          <span class="advanced-label">(stored in Lore block)</span>
         </div>
 
         <textarea id="worldHistory" rows="8" readonly
