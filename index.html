@@ -322,119 +322,118 @@
     </div>
 
     <!-- WORLD TAB -->
-<div id="world" class="tab-panel">
-  <h2>World Engine</h2>
+    <div id="world" class="tab-panel">
+      <h2>World Engine</h2>
 
-  <div class="section-box">
-    <div class="section-title">
-      World State
-      <span class="advanced-label">(basic users: adjust sliders, advanced users: use rules)</span>
-    </div>
+      <div class="section-box">
+        <div class="section-title">
+          World State
+          <span class="advanced-label">(basic users: adjust sliders, advanced users: use rules)</span>
+        </div>
 
-    <label>
-      <strong>Stability</strong><br>
-      <input type="range" id="worldStability" min="0" max="1" step="0.01">
-      <span id="worldStabilityVal"></span>
-    </label>
+        <label>
+          <strong>Stability</strong><br>
+          <input type="range" id="worldStability" min="0" max="1" step="0.01">
+          <span id="worldStabilityVal"></span>
+        </label>
 
-    <label>
-      <strong>Tension</strong><br>
-      <input type="range" id="worldTension" min="0" max="1" step="0.01">
-      <span id="worldTensionVal"></span>
-    </label>
+        <label>
+          <strong>Tension</strong><br>
+          <input type="range" id="worldTension" min="0" max="1" step="0.01">
+          <span id="worldTensionVal"></span>
+        </label>
 
-    <label>
-      <strong>Mystery</strong><br>
-      <input type="range" id="worldMystery" min="0" max="1" step="0.01">
-      <span id="worldMysteryVal"></span>
-    </label>
+        <label>
+          <strong>Mystery</strong><br>
+          <input type="range" id="worldMystery" min="0" max="1" step="0.01">
+          <span id="worldMysteryVal"></span>
+        </label>
 
-    <label>
-      <strong>Tech Level</strong><br>
-      <input type="range" id="worldTechLevel" min="0" max="1" step="0.01">
-      <span id="worldTechLevelVal"></span>
-    </label>
+        <label>
+          <strong>Tech Level</strong><br>
+          <input type="range" id="worldTechLevel" min="0" max="1" step="0.01">
+          <span id="worldTechLevelVal"></span>
+        </label>
 
-    <label>
-      <strong>Magic Level</strong><br>
-      <input type="range" id="worldMagicLevel" min="0" max="1" step="0.01">
-      <span id="worldMagicLevelVal"></span>
-    </label>
+        <label>
+          <strong>Magic Level</strong><br>
+          <input type="range" id="worldMagicLevel" min="0" max="1" step="0.01">
+          <span id="worldMagicLevelVal"></span>
+        </label>
 
-    <label>
-      <strong>Social Cohesion</strong><br>
-      <input type="range" id="worldSocialCohesion" min="0" max="1" step="0.01">
-      <span id="worldSocialCohesionVal"></span>
-    </label>
+        <label>
+          <strong>Social Cohesion</strong><br>
+          <input type="range" id="worldSocialCohesion" min="0" max="1" step="0.01">
+          <span id="worldSocialCohesionVal"></span>
+        </label>
 
-    <label>
-      <strong>Environmental Health</strong><br>
-      <input type="range" id="worldEnvironmentalHealth" min="0" max="1" step="0.01">
-      <span id="worldEnvironmentalHealthVal"></span>
-    </label>
+        <label>
+          <strong>Environmental Health</strong><br>
+          <input type="range" id="worldEnvironmentalHealth" min="0" max="1" step="0.01">
+          <span id="worldEnvironmentalHealthVal"></span>
+        </label>
 
-    <label>
-      <strong>Narrative Momentum</strong><br>
-      <input type="range" id="worldNarrativeMomentum" min="0" max="1" step="0.01">
-      <span id="worldNarrativeMomentumVal"></span>
-    </label>
+        <label>
+          <strong>Narrative Momentum</strong><br>
+          <input type="range" id="worldNarrativeMomentum" min="0" max="1" step="0.01">
+          <span id="worldNarrativeMomentumVal"></span>
+        </label>
 
-    <div style="margin-top: 0.75rem;">
-      <button id="worldReflectBtn">Reflect World</button>
-      <button id="worldResetBtn">Reset World State</button>
-    </div>
+        <div style="margin-top: 0.75rem;">
+          <button id="worldReflectBtn">Reflect World</button>
+          <button id="worldResetBtn">Reset World State</button>
+        </div>
 
-    <div id="worldSummary" style="margin-top: 0.75rem; font-weight: bold;"></div>
-  </div>
+        <div id="worldSummary" style="margin-top: 0.75rem; font-weight: bold;"></div>
+      </div>
 
-  <div class="section-box">
-    <div class="section-title">
-      World Rules
-      <span class="advanced-label">(toggle advanced mode to edit)</span>
-    </div>
+      <div class="section-box">
+        <div class="section-title">
+          World Rules
+          <span class="advanced-label">(toggle advanced mode to edit)</span>
+        </div>
 
-    <label>
-      <input type="checkbox" id="worldAdvancedToggle">
-      <strong>Advanced Mode</strong>
-    </label>
+        <label>
+          <input type="checkbox" id="worldAdvancedToggle">
+          <strong>Advanced Mode</strong>
+        </label>
 
-    <div id="worldAdvancedPanel" style="margin-top: 0.75rem; display: none;">
+        <div id="worldAdvancedPanel" style="margin-top: 0.75rem; display: none;">
 
-      <label>
-        <strong>Growth Rules</strong><br>
-        <textarea id="worldGrowthRules" rows="5"
-          placeholder="One rule per line, e.g.&#10;if tension > 0.7 && socialCohesion < 0.4: stability -= 0.05"></textarea>
-      </label>
+          <label>
+            <strong>Growth Rules</strong><br>
+            <textarea id="worldGrowthRules" rows="5"
+              placeholder="One rule per line, e.g.&#10;if tension > 0.7 && socialCohesion < 0.4: stability -= 0.05"></textarea>
+          </label>
 
-      <label>
-        <strong>World → Characters Influence Rules</strong><br>
-        <textarea id="worldInfluenceRules" rows="5"
-          placeholder="One rule per line, e.g.&#10;if stability < 0.3: characters[*].toneBias = 'cautious'"></textarea>
-      </label>
+          <label>
+            <strong>World → Characters Influence Rules</strong><br>
+            <textarea id="worldInfluenceRules" rows="5"
+              placeholder="One rule per line, e.g.&#10;if stability < 0.3: characters[*].toneBias = 'cautious'"></textarea>
+          </label>
 
-      <label>
-        <strong>Characters → World Feedback Rules</strong><br>
-        <textarea id="worldFeedbackRules" rows="5"
-          placeholder="One rule per line, e.g.&#10;if characters[*].confidence > 0.8: socialCohesion += 0.05"></textarea>
-      </label>
+          <label>
+            <strong>Characters → World Feedback Rules</strong><br>
+            <textarea id="worldFeedbackRules" rows="5"
+              placeholder="One rule per line, e.g.&#10;if characters[*].confidence > 0.8: socialCohesion += 0.05"></textarea>
+          </label>
 
-      <div style="margin-top: 0.75rem;">
-        <button id="worldApplyRulesBtn">Apply Rules</button>
+          <div style="margin-top: 0.75rem;">
+            <button id="worldApplyRulesBtn">Apply Rules</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">
+          World History
+          <span class="advanced-label">(log of world reflections and changes)</span>
+        </div>
+
+        <textarea id="worldHistory" rows="8" readonly
+          style="font-family: monospace; white-space: pre-wrap;"></textarea>
       </div>
     </div>
-  </div>
-
-  <div class="section-box">
-    <div class="section-title">
-      World History
-      <span class="advanced-label">(log of world reflections and changes)</span>
-    </div>
-
-    <textarea id="worldHistory" rows="8" readonly
-      style="font-family: monospace; white-space: pre-wrap;"></textarea>
-  </div>
-</div>
-
 
     <!-- LORE TAB -->
     <div id="lore" class="tab-panel">
