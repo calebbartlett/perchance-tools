@@ -1,8 +1,5 @@
 /************************************************************
- *  SMARHAMR — EDITOR.JS (FULL FILE, CHUNKED DELIVERY)
- *  CHUNK 2A — File header, globals, import handler,
- *             JSON viewer, character extraction,
- *             character editor core, top bar buttons
+ *  SMARHAMR — EDITOR.JS (FULL, CORRECTED)
  ************************************************************/
 
 // Global Perchance export object
@@ -16,6 +13,170 @@ let prettyJsonLines = [];
 // Character rows extracted from Dexie
 let charactersRows = [];
 let currentCharacterIndex = 0;
+
+// Canonical lore entry title
+const WORLD_LORE_TITLE = "WorldEngine by SmarHamr";
+
+// Canonical tags
+const WORLD_TAG_START = "<SmarHamrWorldEngineSTART>";
+const WORLD_TAG_END   = "<SmarHamrWorldEngineEND>";
+
+// In-memory world object (never stored in JSON)
+let worldObj = null;
+
+/************************************************************
+ *  DEFAULT WORLD OBJECT
+ ************************************************************/
+function defaultWorldObject() {
+    return {
+        state: {
+            stability: 0.5,
+            tension: 0.5,
+            mystery: 0.5,
+            techLevel: 0.5,
+            magicLevel: 0.5,
+            socialCohesion: 0.5,
+            environmentalHealth: 0.5,
+            narrativeMomentum: 0.5
+        },
+        rules: {
+            growth: [],
+            influence: [],
+            feedback: []
+        },
+        history: [],
+        url: "(none)"   // URL signature placeholder
+    };
+}
+
+/************************************************************
+ *  GENERATE WORLD ENGINE TEXT BLOCK (compact + ALL CAPS)
+ ************************************************************/
+function generateWorldEngineText(world) {
+    const lines = [];
+
+    lines.push(WORLD_TAG_START);
+
+    // STATE
+    lines.push("STATE:");
+    lines.push(`stability: ${world.state.stability.toFixed(2)}`);
+    lines.push(`tension: ${world.state.tension.toFixed(2)}`);
+    lines.push(`mystery: ${world.state.mystery.toFixed(2)}`);
+    lines.push(`techLevel: ${world.state.techLevel.toFixed(2)}`);
+    lines.push(`magicLevel: ${world.state.magicLevel.toFixed(2)}`);
+    lines.push(`socialCohesion: ${world.state.socialCohesion.toFixed(2)}`);
+    lines.push(`environmentalHealth: ${world.state.environmentalHealth.toFixed(2)}`);
+    lines.push(`narrativeMomentum: ${world.state.narrativeMomentum.toFixed(2)}`);
+
+    // RULES
+    lines.push("RULES:");
+
+    lines.push("GROWTH:");
+    world.rules.growth.forEach(rule => lines.push(`- ${rule}`));
+
+    lines.push("INFLUENCE:");
+    world.rules.influence.forEach(rule => lines.push(`- ${rule}`));
+
+    lines.push("FEEDBACK:");
+    world.rules.feedback.forEach(rule => lines.push(`- ${rule}`));
+
+    // HISTORY
+    lines.push("HISTORY:");
+    world.history.forEach(entry => lines.push(`- ${entry}`));
+
+    // URL signature
+    lines.push("URL:");
+    lines.push(world.url || "(none)");
+
+    lines.push(WORLD_TAG_END);
+
+    return lines.join("\n");
+}
+
+/************************************************************
+ *  PARSE WORLD ENGINE TEXT BLOCK
+ ************************************************************/
+function parseWorldEngineText(text) {
+    const world = defaultWorldObject();
+
+    if (!text || typeof text !== "string") {
+        return world;
+    }
+
+    const startIndex = text.indexOf(WORLD_TAG_START);
+    const endIndex   = text.indexOf(WORLD_TAG_END);
+
+    if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
+        return world;
+    }
+
+    const block = text.substring(
+        startIndex + WORLD_TAG_START.length,
+        endIndex
+    ).trim();
+
+    const lines = block.split("\n").map(l => l.trim());
+
+    let section = null;
+    let ruleSection = null;
+
+    for (const line of lines) {
+        if (line === "STATE:") {
+            section = "STATE";
+            continue;
+        }
+        if (line === "RULES:") {
+            section = "RULES";
+            continue;
+        }
+        if (line === "GROWTH:") {
+            section = "RULES";
+            ruleSection = "growth";
+            continue;
+        }
+        if (line === "INFLUENCE:") {
+            section = "RULES";
+            ruleSection = "influence";
+            continue;
+        }
+        if (line === "FEEDBACK:") {
+            section = "RULES";
+            ruleSection = "feedback";
+            continue;
+        }
+        if (line === "HISTORY:") {
+            section = "HISTORY";
+            continue;
+        }
+        if (line === "URL:") {
+            section = "URL";
+            continue;
+        }
+
+        if (section === "STATE") {
+            const [key, val] = line.split(":").map(s => s.trim());
+            if (key && val && !isNaN(parseFloat(val))) {
+                world.state[key] = parseFloat(val);
+            }
+        } else if (section === "RULES" && ruleSection) {
+            if (line.startsWith("- ")) {
+                const rule = line.substring(2).trim();
+                world.rules[ruleSection].push(rule);
+            }
+        } else if (section === "HISTORY") {
+            if (line.startsWith("- ")) {
+                const entry = line.substring(2).trim();
+                world.history.push(entry);
+            }
+        } else if (section === "URL") {
+            if (line.length > 0) {
+                world.url = line;
+            }
+        }
+    }
+
+    return world;
+}
 
 /************************************************************
  *  IMPORT HANDLER — LOAD .json OR .json.gz
@@ -51,9 +212,8 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
             loadCharacterIntoEditor(0);
         }
 
-        // World Engine will be loaded in CHUNK 2B
-        // loadWorldFromLore();
-        // loadWorldIntoUI();
+        loadWorldFromLore();
+        loadWorldIntoUI();
 
     } catch (err) {
         console.error("Error loading export:", err);
@@ -180,15 +340,8 @@ function loadCharacterIntoEditor(index) {
 
     // ADVANCED: MODEL & TOKENS
     setVal("charModelName", row.modelName || "");
-
-    const tempVal = document.getElementById("charTemperature").value;
-    if (tempVal !== "") row.temperature = parseFloat(tempVal);
-    else delete row.temperature;
-
-    const maxTokensVal = document.getElementById("charMaxTokensPerMessage").value;
-    if (maxTokensVal !== "") row.maxTokensPerMessage = parseInt(maxTokensVal, 10);
-    else delete row.maxTokensPerMessage;
-
+    setVal("charTemperature", row.temperature ?? "");
+    setVal("charMaxTokensPerMessage", row.maxTokensPerMessage ?? "");
     setVal("charTextEmbeddingModelName", row.textEmbeddingModelName || "");
     setVal("charFitMessagesMethod", row.fitMessagesInContextMethod || "");
     setVal("charAutoGenerateMemories", row.autoGenerateMemories || "");
@@ -196,10 +349,7 @@ function loadCharacterIntoEditor(index) {
     // ADVANCED: AVATAR & SCENE
     if (!row.avatar) row.avatar = {};
     setVal("charAvatarUrl", row.avatar.url || "");
-
-    const avatarSizeVal = row.avatar.size ?? "";
-    setVal("charAvatarSize", avatarSizeVal);
-
+    setVal("charAvatarSize", row.avatar.size ?? "");
     setVal("charAvatarShape", row.avatar.shape || "");
 
     if (!row.scene) row.scene = {};
@@ -282,7 +432,7 @@ function applyChangesToCurrentCharacter() {
     row.avatar.url = document.getElementById("charAvatarUrl").value;
 
     const avatarSizeVal = document.getElementById("charAvatarSize").value;
-    if (avatarSizeVal !== "") row.avatar.size = parseInt(avatar.value, 10);
+    if (avatarSizeVal !== "") row.avatar.size = parseInt(avatarSizeVal, 10);
     else delete row.avatar.size;
 
     row.avatar.shape = document.getElementById("charAvatarShape").value;
@@ -320,20 +470,7 @@ if (applyBtnTop) {
 }
 
 const downloadBtnTop = document.getElementById("downloadUpdatedBtnTop");
-if (downloadBtnTop) {
-    downloadBtnTop.addEventListener("click", () => {
-        // Export logic will be added in CHUNK 2B
-        // downloadUpdatedExport();
-    });
-}
-
 const scrubBtnTop = document.getElementById("scrubBtnTop");
-if (scrubBtnTop) {
-    scrubBtnTop.addEventListener("click", () => {
-        const btn = document.getElementById("processBtn");
-        if (btn) btn.click();
-    });
-}
 
 /************************************************************
  *  LORE TABLE HANDLING — FIND / CREATE
@@ -381,12 +518,12 @@ function loadWorldFromLore() {
     worldObj = defaultWorldObject();
 
     if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
-        return; // no dexie structure
+        return;
     }
 
     const { row } = findWorldLoreRow();
     if (!row) {
-        return; // no existing world engine block
+        return;
     }
 
     const content = row.content ?? row.body ?? row.text ?? "";
@@ -409,17 +546,19 @@ function saveWorldToLore() {
         return;
     }
 
+    // Ensure history is clean strings
+    if (!worldObj) worldObj = defaultWorldObject();
+    worldObj.history = (worldObj.history || []).filter(h => typeof h === "string");
+
     const { row, table } = findWorldLoreRow();
     const serialized = generateWorldEngineText(worldObj);
 
     if (row) {
-        // Update existing row
         if ("content" in row) row.content = serialized;
         else if ("body" in row) row.body = serialized;
         else if ("text" in row) row.text = serialized;
         else row.content = serialized;
     } else {
-        // Create new row
         const newRow = {
             id: `worldengine-${Date.now()}`,
             title: WORLD_LORE_TITLE,
@@ -439,10 +578,8 @@ function downloadUpdatedExport() {
     }
 
     try {
-        // Save world engine into lore before exporting
         saveWorldToLore();
 
-        // Timestamp YYYYMMDDhhmm
         const now = new Date();
         const timestamp =
             now.getFullYear().toString() +
@@ -451,11 +588,9 @@ function downloadUpdatedExport() {
             String(now.getHours()).padStart(2, "0") +
             String(now.getMinutes()).padStart(2, "0");
 
-        // Store timestamp inside meta
         if (!perchanceData.meta) perchanceData.meta = {};
         perchanceData.meta.exportTimestamp = timestamp;
 
-        // Filename
         const filename = `export_${timestamp}.json.gz`;
 
         const jsonString = JSON.stringify(perchanceData);
@@ -479,7 +614,7 @@ function downloadUpdatedExport() {
 }
 
 /************************************************************
- *  CONNECT EXPORT BUTTON TO EXPORT FUNCTION
+ *  CONNECT EXPORT & SCRUB BUTTONS
  ************************************************************/
 if (downloadBtnTop) {
     downloadBtnTop.addEventListener("click", () => {
@@ -487,12 +622,15 @@ if (downloadBtnTop) {
     });
 }
 
-/************************************************************
- *  WORLD ENGINE — UI WIRING + REFLECTION + RULES + HISTORY
- ************************************************************/
+if (scrubBtnTop) {
+    scrubBtnTop.addEventListener("click", () => {
+        const btn = document.getElementById("processBtn");
+        if (btn) btn.click();
+    });
+}
 
 /************************************************************
- *  CLAMP UTILITY
+ *  WORLD ENGINE — UI WIRING + REFLECTION + RULES + HISTORY
  ************************************************************/
 function clamp01(v) {
     if (v < 0) return 0;
@@ -500,9 +638,6 @@ function clamp01(v) {
     return v;
 }
 
-/************************************************************
- *  UPDATE SLIDER + LABEL
- ************************************************************/
 function setSlider(sliderId, labelId, value) {
     const slider = document.getElementById(sliderId);
     const label = document.getElementById(labelId);
@@ -511,7 +646,6 @@ function setSlider(sliderId, labelId, value) {
     slider.value = value;
     label.textContent = parseFloat(value).toFixed(2);
 
-    // Remove previous listener by cloning node
     const newSlider = slider.cloneNode(true);
     slider.parentNode.replaceChild(newSlider, slider);
 
@@ -522,9 +656,6 @@ function setSlider(sliderId, labelId, value) {
     });
 }
 
-/************************************************************
- *  LOAD WORLD INTO UI
- ************************************************************/
 function loadWorldIntoUI() {
     if (!worldObj) loadWorldFromLore();
     if (!worldObj) worldObj = defaultWorldObject();
@@ -553,9 +684,6 @@ function loadWorldIntoUI() {
     updateWorldSummary();
 }
 
-/************************************************************
- *  SAVE WORLD STATE FROM UI (sliders → worldObj)
- ************************************************************/
 function saveWorldStateFromUI() {
     if (!worldObj) worldObj = defaultWorldObject();
 
@@ -576,9 +704,6 @@ function saveWorldStateFromUI() {
     s.narrativeMomentum = clamp01(getVal("worldNarrativeMomentum"));
 }
 
-/************************************************************
- *  DESCRIBE LEVEL (for summary)
- ************************************************************/
 function describeLevel(v) {
     if (v < 0.2) return "very low";
     if (v < 0.4) return "low";
@@ -587,9 +712,6 @@ function describeLevel(v) {
     return "very high";
 }
 
-/************************************************************
- *  UPDATE WORLD SUMMARY
- ************************************************************/
 function updateWorldSummary() {
     if (!worldObj || !worldObj.state) return;
 
@@ -609,9 +731,6 @@ function updateWorldSummary() {
     if (el) el.textContent = summaryLines.join(" | ");
 }
 
-/************************************************************
- *  SIMPLE TIMESTAMP (YYYYMMDDhhmm)
- ************************************************************/
 function getSimpleTimestamp() {
     const now = new Date();
     return (
@@ -623,9 +742,6 @@ function getSimpleTimestamp() {
     );
 }
 
-/************************************************************
- *  WORLD REFLECTION ENGINE
- ************************************************************/
 function reflectWorld() {
     if (!worldObj) worldObj = defaultWorldObject();
 
@@ -635,7 +751,6 @@ function reflectWorld() {
     const timestamp = getSimpleTimestamp();
     const notes = [];
 
-    // Built-in reflection logic
     if (s.tension > 0.7 && s.socialCohesion < 0.4) {
         s.stability = clamp01(s.stability - 0.05);
         notes.push("High tension + low cohesion → stability decreased.");
@@ -664,9 +779,6 @@ function reflectWorld() {
     updateWorldSummary();
 }
 
-/************************************************************
- *  RESET WORLD STATE
- ************************************************************/
 function resetWorldState() {
     worldObj = defaultWorldObject();
 
@@ -681,9 +793,6 @@ function resetWorldState() {
     saveWorldToLore();
 }
 
-/************************************************************
- *  APPLY WORLD RULES FROM UI
- ************************************************************/
 function applyWorldRulesFromUI() {
     if (!worldObj) worldObj = defaultWorldObject();
 
@@ -739,8 +848,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /************************************************************
- *  TAB SWITCHING (HTML already has basic logic)
- *  This ensures world UI loads when switching to World tab.
+ *  TAB SWITCHING — ENSURE WORLD UI LOADS
  ************************************************************/
 document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".tab-button");
@@ -750,7 +858,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const tab = btn.dataset.tab;
 
             if (tab === "world") {
-                // Load world from lore when entering the tab
                 loadWorldFromLore();
                 loadWorldIntoUI();
             }
@@ -760,7 +867,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /************************************************************
  *  SCRUBBER INTEGRATION
- *  (scrubber.js handles the actual cleaning)
  ************************************************************/
 const processBtn = document.getElementById("processBtn");
 if (processBtn) {
@@ -779,14 +885,11 @@ if (processBtn) {
             document.getElementById("savedImagesCount").textContent = result.savedImagesRemoved;
             document.getElementById("imageTagCount").textContent = result.imageTagsRemoved;
 
-            // Update viewer
             document.getElementById("jsonViewer").textContent = result.cleanedJson;
 
-            // Replace perchanceData with cleaned version
             perchanceData = JSON.parse(result.cleanedJson);
             rawJsonText = result.cleanedJson;
 
-            // Re-extract characters
             extractCharactersFromDexie();
             populateCharacterDropdown();
 
@@ -794,7 +897,6 @@ if (processBtn) {
                 loadCharacterIntoEditor(0);
             }
 
-            // Reload world engine
             loadWorldFromLore();
             loadWorldIntoUI();
 
@@ -810,19 +912,17 @@ if (processBtn) {
  *  SAFETY CHECKS — ENSURE WORLD ENGINE ALWAYS EXISTS
  ************************************************************/
 function ensureWorldEngineExists() {
-    const { row, table } = findWorldLoreRow();
+    const { row } = findWorldLoreRow();
     if (!row) {
-        // Create a new world engine block if missing
         worldObj = defaultWorldObject();
         saveWorldToLore();
     }
 }
 
 /************************************************************
- *  INITIALIZATION AFTER IMPORT
+ *  INITIALIZATION AFTER IMPORT (if any)
  ************************************************************/
 document.addEventListener("DOMContentLoaded", () => {
-    // If a file is already loaded (rare), initialize world
     if (perchanceData) {
         ensureWorldEngineExists();
         loadWorldFromLore();
@@ -831,7 +931,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /************************************************************
- *  END OF FILE — SMARHAMR EDITOR.JS COMPLETE
+ *  END OF FILE
  ************************************************************/
 console.log("SmarHamr editor.js fully loaded.");
-
