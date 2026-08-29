@@ -1,22 +1,12 @@
 /************************************************************
- *  SMARHAMR — EDITOR.JS (MATCHING NEW INDEX.HTML)
- *  - Profiles tab (character editor)
- *  - Lore tab (world lore template + save)
- *  - Memory tab placeholder (none yet)
- *  - Dexie viewer (raw/pretty JSON)
- *  - Scrubber in top bar
- *  - No World Engine
+ *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
  ************************************************************/
 
-// Global Perchance export object
 let perchanceData = null;
-
-// Raw + pretty JSON viewer buffers
 let rawJsonText = "";
 let prettyJsonText = "";
 let prettyJsonLines = [];
 
-// Character rows extracted from Dexie
 let charactersRows = [];
 let currentCharacterIndex = 0;
 
@@ -52,10 +42,8 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
         if (charactersRows.length > 0) {
             loadCharacterIntoEditor(0);
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
-
-        // Optionally load existing lore into Lore tab
-        loadLoreIntoEditor();
 
     } catch (err) {
         console.error("Error loading export:", err);
@@ -64,7 +52,7 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 });
 
 /************************************************************
- *  JSON VIEWER BUTTONS (Dexie Viewer tab)
+ *  JSON VIEWER BUTTONS
  ************************************************************/
 document.getElementById("showRawBtn").addEventListener("click", () => {
     document.getElementById("jsonViewer").textContent =
@@ -92,7 +80,7 @@ document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
 });
 
 /************************************************************
- *  CHARACTER EXTRACTION FROM DEXIE
+ *  CHARACTER EXTRACTION
  ************************************************************/
 function extractCharactersFromDexie() {
     charactersRows = [];
@@ -106,7 +94,7 @@ function extractCharactersFromDexie() {
     const charactersTable = tablesDump.find(t => t.tableName === "characters");
 
     if (!charactersTable || !Array.isArray(charactersTable.rows)) {
-        console.warn("No 'characters' table found in Dexie export.");
+        console.warn("No 'characters' table found.");
         return;
     }
 
@@ -142,12 +130,13 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
     });
 }
 
 /************************************************************
- *  LOAD CHARACTER INTO EDITOR (Profiles tab)
+ *  LOAD CHARACTER INTO EDITOR
  ************************************************************/
 function loadCharacterIntoEditor(index) {
     const row = charactersRows[index];
@@ -173,14 +162,14 @@ function loadCharacterIntoEditor(index) {
     }
     setVal("charGreeting", greeting);
 
-    // ADVANCED: MESSAGE & PROMPTS
+    // MESSAGE & PROMPTS
     setVal("charMessageWrapperStyle", row.messageWrapperStyle || "");
     setVal("charImagePromptPrefix", row.imagePromptPrefix || "");
     setVal("charImagePromptSuffix", row.imagePromptSuffix || "");
     setVal("charImagePromptTriggers", row.imagePromptTriggers || "");
     setVal("charMessageInputPlaceholder", row.messageInputPlaceholder || "");
 
-    // ADVANCED: MODEL & TOKENS
+    // MODEL & TOKENS
     setVal("charModelName", row.modelName || "");
     setVal("charTemperature", row.temperature ?? "");
     setVal("charMaxTokensPerMessage", row.maxTokensPerMessage ?? "");
@@ -188,7 +177,7 @@ function loadCharacterIntoEditor(index) {
     setVal("charFitMessagesMethod", row.fitMessagesInContextMethod || "");
     setVal("charAutoGenerateMemories", row.autoGenerateMemories || "");
 
-    // ADVANCED: AVATAR & SCENE
+    // AVATAR & SCENE
     if (!row.avatar) row.avatar = {};
     setVal("charAvatarUrl", row.avatar.url || "");
     setVal("charAvatarSize", row.avatar.size ?? "");
@@ -201,7 +190,7 @@ function loadCharacterIntoEditor(index) {
     setVal("charSceneBackgroundUrl", row.scene.background.url || "");
     setVal("charSceneMusicUrl", row.scene.music.url || "");
 
-    // ADVANCED: META & FLAGS
+    // META & FLAGS
     setVal("charMetaTitle", row.metaTitle || "");
     setVal("charMetaDescription", row.metaDescription || "");
     setVal("charMetaImage", row.metaImage || "");
@@ -218,7 +207,7 @@ function loadCharacterIntoEditor(index) {
 }
 
 /************************************************************
- *  APPLY CHANGES TO CURRENT CHARACTER
+ *  APPLY PROFILE CHANGES
  ************************************************************/
 function applyChangesToCurrentCharacter() {
     if (!perchanceData || charactersRows.length === 0) {
@@ -247,14 +236,14 @@ function applyChangesToCurrentCharacter() {
     }
     row.initialMessages[0].content = greeting;
 
-    // ADVANCED: MESSAGE & PROMPTS
+    // MESSAGE & PROMPTS
     row.messageWrapperStyle = document.getElementById("charMessageWrapperStyle").value;
     row.imagePromptPrefix = document.getElementById("charImagePromptPrefix").value;
     row.imagePromptSuffix = document.getElementById("charImagePromptSuffix").value;
     row.imagePromptTriggers = document.getElementById("charImagePromptTriggers").value;
     row.messageInputPlaceholder = document.getElementById("charMessageInputPlaceholder").value;
 
-    // ADVANCED: MODEL & TOKENS
+    // MODEL & TOKENS
     row.modelName = document.getElementById("charModelName").value;
 
     const tempVal = document.getElementById("charTemperature").value;
@@ -269,7 +258,7 @@ function applyChangesToCurrentCharacter() {
     row.fitMessagesInContextMethod = document.getElementById("charFitMessagesMethod").value;
     row.autoGenerateMemories = document.getElementById("charAutoGenerateMemories").value;
 
-    // ADVANCED: AVATAR & SCENE
+    // AVATAR & SCENE
     if (!row.avatar) row.avatar = {};
     row.avatar.url = document.getElementById("charAvatarUrl").value;
 
@@ -286,7 +275,7 @@ function applyChangesToCurrentCharacter() {
     row.scene.background.url = document.getElementById("charSceneBackgroundUrl").value;
     row.scene.music.url = document.getElementById("charSceneMusicUrl").value;
 
-    // ADVANCED: META & FLAGS
+    // META & FLAGS
     row.metaTitle = document.getElementById("charMetaTitle").value;
     row.metaDescription = document.getElementById("charMetaDescription").value;
     row.metaImage = document.getElementById("charMetaImage").value;
@@ -302,129 +291,109 @@ function applyChangesToCurrentCharacter() {
 }
 
 /************************************************************
- *  TOP BAR BUTTONS
+ *  APPLY BUTTON WIRING (PER TAB)
  ************************************************************/
-const applyBtnTop = document.getElementById("applyChangesBtnTop");
-if (applyBtnTop) {
-    applyBtnTop.addEventListener("click", () => {
-        applyChangesToCurrentCharacter();
-    });
-}
+document.getElementById("applyProfileBtn")
+    .addEventListener("click", applyChangesToCurrentCharacter);
 
-const downloadBtnTop = document.getElementById("downloadUpdatedBtnTop");
-const scrubBtnTop = document.getElementById("scrubBtnTop");
+document.getElementById("applyLoreBtn")
+    .addEventListener("click", saveLoreToPerchance);
+
+document.getElementById("applyMemoryBtn")
+    .addEventListener("click", () => {
+        alert("Memory editing not implemented yet.");
+    });
 
 /************************************************************
- *  LORE TAB — TEMPLATE + SAVE
+ *  LORE TAB — CHARACTER LORE + NUMERIC WORLD TEMPLATE
  ************************************************************/
-function generateWorldLoreTemplate() {
-    const template = `
-World Overview
---------------
-A concise description of the world’s tone, themes, and general nature.
-
-Geography & Environment
------------------------
-Key regions, climates, natural features, and environmental conditions.
-
-Cultures & Societies
---------------------
-Major civilizations, cultural traits, social structures, and traditions.
-
-Technology & Magic
-------------------
-The level of technology, magical systems, and how they interact.
-
-Factions & Power Structures
----------------------------
-Important groups, governments, alliances, and conflicts.
-
-History & Timeline
-------------------
-Major historical events, turning points, and eras.
-
-Current State of the World
---------------------------
-What is happening right now? Tensions, mysteries, opportunities.
-
-Notes
------
-Any additional details or meta information.
-`.trim();
-
-    document.getElementById("loreEditor").value = template;
-}
-
-function ensureLoreTable() {
-    if (!perchanceData) return null;
-
-    if (!perchanceData.data) perchanceData.data = {};
-    if (!Array.isArray(perchanceData.data.data)) perchanceData.data.data = [];
-
-    let loreTable = perchanceData.data.data.find(t => t.tableName === "lore");
-
-    if (!loreTable) {
-        loreTable = {
-            tableName: "lore",
-            rows: []
-        };
-        perchanceData.data.data.push(loreTable);
-    } else if (!Array.isArray(loreTable.rows)) {
-        loreTable.rows = [];
-    }
-
-    return loreTable;
-}
-
-function loadLoreIntoEditor() {
-    if (!perchanceData) return;
-
-    const loreTable = ensureLoreTable();
-    if (!loreTable) return;
-
-    const row = loreTable.rows.find(r => r.name === "World Lore");
+function loadCharacterLoreIntoEditor() {
+    const row = charactersRows[currentCharacterIndex];
     if (!row) return;
 
-    const loreText = row.content ?? row.body ?? row.text ?? "";
-    const el = document.getElementById("loreEditor");
-    if (el) el.value = loreText;
+    const loreText = row.lore ?? "";
+    document.getElementById("loreEditor").value = loreText;
 }
 
 function saveLoreToPerchance() {
-    if (!perchanceData) {
-        alert("No export loaded.");
-        return;
-    }
-
-    const loreText = document.getElementById("loreEditor").value;
-
-    const loreTable = ensureLoreTable();
-    if (!loreTable) {
-        alert("Could not ensure lore table.");
-        return;
-    }
-
-    let row = loreTable.rows.find(r => r.name === "World Lore");
+    const row = charactersRows[currentCharacterIndex];
     if (!row) {
-        row = {
-            id: `world-lore-${Date.now()}`,
-            name: "World Lore",
-            content: loreText,
-            embeddings: {},
-            tags: []
-        };
-        loreTable.rows.push(row);
-    } else {
-        row.content = loreText;
-        if (!row.embeddings) row.embeddings = {};
-        if (!row.tags) row.tags = [];
+        alert("No character selected.");
+        return;
     }
 
-    alert("Lore saved.");
+    row.lore = document.getElementById("loreEditor").value;
+
+    alert("Lore saved to character.");
 }
 
+document.getElementById("generateLoreTemplateBtn")
+    .addEventListener("click", () => {
+        const template = `
+World Metrics
+-------------
+Magic Level: 3/10
+Tech Level: 7/10
+Cultural Pressure: 4/10
+Environmental Pressure: 5/10
+Supernatural Pressure: 2/10
+Stability Index: 6/10
+Threat Index: 3/10
+Discovery Index: 7/10
+
+World Overview
+--------------
+A mostly stable, modern‑tech world with low‑level magic phenomena. Society is comfortable but curious, with rising interest in ancient mysteries and subtle supernatural events.
+
+Geography & Environment
+-----------------------
+• Climate mostly temperate with mild extremes.
+• Environmental Pressure (5/10): Occasional natural anomalies near ley‑current hotspots.
+• No catastrophic zones; exploration is safe but intriguing.
+
+Cultures & Societies
+--------------------
+• Cultural Pressure (4/10): Minor tensions between tradition and innovation.
+• Most societies are cooperative, globally connected, and moderately progressive.
+• Subcultures exist around magic folklore and scientific exploration.
+
+Technology & Magic
+------------------
+• Tech Level (7/10): Comparable to early 21st‑century Earth with emerging advanced materials.
+• Magic Level (3/10): Rare, subtle, often mistaken for intuition or coincidence.
+• Magic is not systematized; no formal schools or institutions.
+
+Factions & Power Structures
+---------------------------
+• Stability Index (6/10): Governments are functional, alliances mostly stable.
+• The Archive: Neutral researchers cataloging anomalies.
+• Meridian Council: Tech‑forward industrial alliance.
+• Solari Clans: Tradition‑focused nomadic groups.
+
+History & Timeline
+------------------
+• 800 years ago: The Shattering — collapse of ancient empires.
+• 200 years ago: Industrial rise.
+• 40 years ago: Rediscovery of ley currents.
+• Present: Growing interest in pre‑Shattering ruins.
+
+Current State of the World
+--------------------------
+• Threat Index (3/10): Low — anomalies are strange but rarely dangerous.
+• Discovery Index (7/10): High — explorers uncover ruins, artifacts, and unexplained signals.
+• Public curiosity is rising; governments begin funding research.
+
+Notes
+-----
+• These numeric values give users a baseline to adjust.
+• Increase or decrease any metric to shift tone, danger, or complexity.
+`.trim();
+
+        document.getElementById("loreEditor").value = template;
+    });
+
 /************************************************************
- *  EXPORT — GENERATE .json.gz WITH TIMESTAMP
+ *  EXPORT — GENERATE .json.gz
  ************************************************************/
 function downloadUpdatedExport() {
     if (!perchanceData) {
@@ -469,18 +438,14 @@ function downloadUpdatedExport() {
 /************************************************************
  *  CONNECT EXPORT & SCRUB BUTTONS
  ************************************************************/
-if (downloadBtnTop) {
-    downloadBtnTop.addEventListener("click", () => {
-        downloadUpdatedExport();
-    });
-}
+document.getElementById("downloadUpdatedBtnTop")
+    .addEventListener("click", downloadUpdatedExport);
 
-if (scrubBtnTop) {
-    scrubBtnTop.addEventListener("click", () => {
+document.getElementById("scrubBtnTop")
+    .addEventListener("click", () => {
         const btn = document.getElementById("processBtn");
         if (btn) btn.click();
     });
-}
 
 /************************************************************
  *  SCRUBBER INTEGRATION
@@ -496,12 +461,6 @@ if (processBtn) {
         try {
             const result = scrubExport(rawJsonText);
 
-            document.getElementById("origSize").textContent = result.originalSize;
-            document.getElementById("cleanSize").textContent = result.cleanedSize;
-            document.getElementById("reduction").textContent = result.reductionPercent + "%";
-            document.getElementById("savedImagesCount").textContent = result.savedImagesRemoved;
-            document.getElementById("imageTagCount").textContent = result.imageTagsRemoved;
-
             document.getElementById("jsonViewer").textContent = result.cleanedJson;
 
             perchanceData = JSON.parse(result.cleanedJson);
@@ -512,9 +471,8 @@ if (processBtn) {
 
             if (charactersRows.length > 0) {
                 loadCharacterIntoEditor(0);
+                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
             }
-
-            loadLoreIntoEditor();
 
             document.getElementById("status").textContent = "Scrub complete.";
         } catch (err) {
@@ -525,26 +483,6 @@ if (processBtn) {
 }
 
 /************************************************************
- *  LORE TAB BUTTON WIRING
- ************************************************************/
-document.addEventListener("DOMContentLoaded", () => {
-    const genBtn = document.getElementById("generateLoreTemplateBtn");
-    if (genBtn) {
-        genBtn.addEventListener("click", () => {
-            generateWorldLoreTemplate();
-        });
-    }
-
-    const saveLoreBtn = document.getElementById("saveLoreBtn");
-    if (saveLoreBtn) {
-        saveLoreBtn.addEventListener("click", () => {
-            saveLoreToPerchance();
-        });
-    }
-});
-
-/************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Lore version) fully loaded.");
- 
+console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
