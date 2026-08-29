@@ -1,133 +1,175 @@
 let perchanceData = null;
-let characters = [];
-let currentIndex = 0;
+let rawJsonText = "";
+let prettyJsonText = "";
+let prettyJsonLines = [];
+let charactersRows = [];
 
-// ===============================
-// Load Perchance Export
-// ===============================
-document.getElementById("loadBtn").addEventListener("click", async () => {
-    const file = document.getElementById("fileInput").files[0];
-    if (!file) {
-        alert("Choose a .json.gz export first.");
-        return;
-    }
+// IMPORT HANDLER
+document.getElementById("fileInput").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
     try {
-        const arrayBuffer = await file.arrayBuffer();
-        const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: "string" });
+        const isGzip = file.name.endsWith(".gz");
+        let decompressed;
 
+        if (isGzip) {
+            const arrayBuffer = await file.arrayBuffer();
+            decompressed = pako.ungzip(arrayBuffer, { to: "string" });
+        } else {
+            decompressed = await file.text();
+        }
+
+        rawJsonText = decompressed;
         perchanceData = JSON.parse(decompressed);
 
-        document.getElementById("rawJson").textContent =
-            JSON.stringify(perchanceData, null, 2);
+        prettyJsonText = JSON.stringify(perchanceData, null, 2);
+        prettyJsonLines = prettyJsonText.split("\n");
 
-        loadCharacterList();
-        loadCharacterFields(0);
+        document.getElementById("importStatus").textContent = "File loaded";
 
-        document.getElementById("status").textContent = "Export loaded.";
+        document.getElementById("jsonViewer").textContent = rawJsonText;
+
+        extractCharactersFromDexie();
+        populateCharacterDropdown();
+
+        if (charactersRows.length > 0) {
+            loadCharacterIntoEditor(0);
+        }
+
     } catch (err) {
-        console.error(err);
-        alert("Failed to load export.");
+        console.error("Error loading export:", err);
+        document.getElementById("importStatus").textContent = "Error loading file";
     }
 });
 
-// ===============================
-// Load Character List (Dropdown)
-// ===============================
-function loadCharacterList() {
-    characters = perchanceData?.data?.data?.[0]?.characters || [];
+// VIEWER BUTTONS
+document.getElementById("showRawBtn").addEventListener("click", () => {
+    document.getElementById("jsonViewer").textContent = rawJsonText || "(no JSON loaded yet)";
+});
 
+document.getElementById("showPrettyBtn").addEventListener("click", () => {
+    if (!prettyJsonLines.length) {
+        document.getElementById("jsonViewer").textContent = "(no JSON loaded yet)";
+        return;
+    }
+    const first500 = prettyJsonLines.slice(0, 500).join("\n");
+    document.getElementById("jsonViewer").textContent = first500;
+});
+
+document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
+    if (!prettyJsonText) return;
+    const blob = new Blob([prettyJsonText], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pretty-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// DEXIE CHARACTER EXTRACTION
+function extractCharactersFromDexie() {
+    charactersRows = [];
+
+    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
+        console.warn("Dexie structure not found.");
+        return;
+    }
+
+    const tablesDump = perchanceData.data.data;
+    const charactersTable = tablesDump.find(t => t.tableName === "characters");
+
+    if (!charactersTable || !Array.isArray(charactersTable.rows)) {
+        console.warn("No 'characters' table found in Dexie export.");
+        return;
+    }
+
+    charactersRows = charactersTable.rows;
+}
+
+// POPULATE DROPDOWN (names only)
+function populateCharacterDropdown() {
     const select = document.getElementById("characterSelect");
     select.innerHTML = "";
 
-    characters.forEach((char, i) => {
-        const ai = char.aiSettings || {};
-        const name = ai.name || `Character ${i + 1}`;
-        const role = ai.roleInstructions ? ai.roleInstructions.slice(0, 40) : "";
-        const preview = role ? ` — (${role}...)` : "";
+    if (charactersRows.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "(no characters found)";
+        select.appendChild(opt);
+        return;
+    }
 
+    charactersRows.forEach((row, index) => {
+        const name = row.name || `Character ${index + 1}`;
         const option = document.createElement("option");
-        option.value = i;
-        option.textContent = `${i + 1}: ${name}${preview}`;
+        option.value = index;
+        option.textContent = name;
         select.appendChild(option);
     });
 
     select.addEventListener("change", () => {
-        currentIndex = parseInt(select.value);
-        loadCharacterFields(currentIndex);
+        const idx = parseInt(select.value, 10);
+        if (!isNaN(idx)) loadCharacterIntoEditor(idx);
     });
 }
 
-// ===============================
-// Load Character Fields into UI
-// ===============================
-function loadCharacterFields(index) {
-    const ai = characters[index]?.aiSettings;
-    if (!ai) {
-        alert("Could not find aiSettings for this character.");
-        return;
-    }
+// LOAD CHARACTER INTO FULL EDITOR
+function loadCharacterIntoEditor(index) {
+    const row = charactersRows[index];
+    if (!row) return;
 
-    document.getElementById("charName").value = ai.name || "";
-    document.getElementById("charDescription").value = ai.description || "";
-    document.getElementById("charPersonality").value = ai.personality || "";
-    document.getElementById("charRoleInstructions").value = ai.roleInstructions || "";
-    document.getElementById("charGreeting").value = ai.greeting || "";
+    // BASIC
+    document.getElementById("charName").value = row.name || "";
+    document.getElementById("charRoleInstructions").value = row.roleInstruction || "";
+    document.getElementById("charReminder").value = row.reminderMessage || "";
+    document.getElementById("charGeneralWriting").value = row.generalWritingInstructions || "";
+
+    let greeting = "";
+    if (Array.isArray(row.initialMessages) && row.initialMessages.length > 0) {
+        const first = row.initialMessages[0];
+        if (first && typeof first.content === "string") {
+            greeting = first.content;
+        }
+    }
+    document.getElementById("charGreeting").value = greeting;
+
+    // ADVANCED: MESSAGE & PROMPTS
+    document.getElementById("charMessageWrapperStyle").value = row.messageWrapperStyle || "";
+    document.getElementById("charImagePromptPrefix").value = row.imagePromptPrefix || "";
+    document.getElementById("charImagePromptSuffix").value = row.imagePromptSuffix || "";
+    document.getElementById("charImagePromptTriggers").value = row.imagePromptTriggers || "";
+    document.getElementById("charMessageInputPlaceholder").value = row.messageInputPlaceholder || "";
+
+    // ADVANCED: MODEL & TOKENS
+    document.getElementById("charModelName").value = row.modelName || "";
+    document.getElementById("charTemperature").value = row.temperature ?? "";
+    document.getElementById("charMaxTokensPerMessage").value = row.maxTokensPerMessage ?? "";
+    document.getElementById("charTextEmbeddingModelName").value = row.textEmbeddingModelName || "";
+    document.getElementById("charFitMessagesMethod").value = row.fitMessagesInContextMethod || "";
+    document.getElementById("charAutoGenerateMemories").value = row.autoGenerateMemories || "";
+
+    // ADVANCED: AVATAR & SCENE
+    const avatar = row.avatar || {};
+    document.getElementById("charAvatarUrl").value = avatar.url || "";
+    document.getElementById("charAvatarSize").value = avatar.size ?? "";
+    document.getElementById("charAvatarShape").value = avatar.shape || "";
+
+    const scene = row.scene || {};
+    const background = scene.background || {};
+    const music = scene.music || {};
+    document.getElementById("charSceneBackgroundUrl").value = background.url || "";
+    document.getElementById("charSceneMusicUrl").value = music.url || "";
+
+    // ADVANCED: META & FLAGS
+    document.getElementById("charMetaTitle").value = row.metaTitle || "";
+    document.getElementById("charMetaDescription").value = row.metaDescription || "";
+    document.getElementById("charMetaImage").value = row.metaImage || "";
+
+    const streaming = row.streamingResponse;
+    document.getElementById("charStreamingResponse").value =
+        streaming === false ? "false" : "true";
+
+    document.getElementById("charFolderPath").value = row.folderPath || "";
 }
-
-// ===============================
-// Apply Changes to JSON
-// ===============================
-document.getElementById("applyChangesBtn").addEventListener("click", () => {
-    if (!perchanceData) {
-        alert("No export loaded.");
-        return;
-    }
-
-    const ai = characters[currentIndex]?.aiSettings;
-    if (!ai) {
-        alert("Could not find aiSettings for this character.");
-        return;
-    }
-
-    ai.name = document.getElementById("charName").value;
-    ai.description = document.getElementById("charDescription").value;
-    ai.personality = document.getElementById("charPersonality").value;
-    ai.roleInstructions = document.getElementById("charRoleInstructions").value;
-    ai.greeting = document.getElementById("charGreeting").value;
-
-    document.getElementById("status").textContent =
-        `Changes applied to character ${currentIndex + 1}.`;
-});
-
-// ===============================
-// Download Updated Export
-// ===============================
-document.getElementById("downloadUpdatedBtn").addEventListener("click", () => {
-    if (!perchanceData) {
-        alert("No export loaded.");
-        return;
-    }
-
-    try {
-        const jsonString = JSON.stringify(perchanceData);
-        const gzipped = pako.gzip(jsonString);
-
-        const blob = new Blob([gzipped], { type: "application/gzip" });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "updated_export.json.gz";
-        a.click();
-
-        URL.revokeObjectURL(url);
-
-        document.getElementById("status").textContent =
-            "Updated export downloaded.";
-    } catch (err) {
-        console.error(err);
-        document.getElementById("status").textContent =
-            "Error generating updated export.";
-    }
-});
