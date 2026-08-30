@@ -241,29 +241,35 @@
       <textarea id="loreEditor" rows="20" style="margin-top:1rem;"></textarea>
     </div>
 
-    <!-- ========================= -->
-    <!-- MEMORY TAB (placeholder) -->
-    <!-- ========================= -->
-    <div id="memory" class="tab-panel">
-      <h2>Memory Editor</h2>
-      <p>This section will allow editing Perchance memory rows once implemented.</p>
+<!-- ========================= -->
+<!-- MEMORIES TAB (functional) -->
+<!-- ========================= -->
+<div id="memories" class="tab-panel">
+  <h2>Memories</h2>
 
-      <!-- APPLY BUTTON FOR THIS TAB -->
-      <button id="applyMemoryBtn" style="margin-bottom:1rem;">
-        Apply Memory Changes
-      </button>
+  <!-- CHARACTER SELECTOR -->
+  <label for="memoryCharacterSelect"><strong>Select Character:</strong></label>
+  <select id="memoryCharacterSelect" style="margin-bottom:1rem;"></select>
 
-      <div class="box">
-        <p><strong>Memory editing is not yet implemented.</strong></p>
-        <p>This placeholder will later support:</p>
-        <ul>
-          <li>Viewing memory rows</li>
-          <li>Editing memory content</li>
-          <li>Adding new memory entries</li>
-          <li>Deleting memory entries</li>
-        </ul>
-      </div>
-    </div>
+  <!-- SEARCH BAR -->
+  <label for="memorySearch"><strong>Search Memories:</strong></label>
+  <input id="memorySearch" type="text" placeholder="Search..." style="width:100%; margin-bottom:1rem;">
+
+  <!-- MEMORY EDITOR -->
+  <label for="memoryEditor"><strong>Memory Editor:</strong></label>
+  <textarea id="memoryEditor" rows="15" style="width:100%;"></textarea>
+
+  <!-- ADD NEW MEMORY -->
+  <div style="margin-top:1rem;">
+    <label for="newMemoryText"><strong>Add New Memory:</strong></label>
+    <input id="newMemoryText" type="text" style="width:80%;">
+    <button id="addMemoryBtn">Add</button>
+  </div>
+
+  <!-- SAVE BUTTON -->
+  <button id="saveMemoryBtn" style="margin-top:1rem;">Save All Changes</button>
+</div>
+
 
     <!-- ========================= -->
     <!-- DEXIE VIEWER TAB -->
