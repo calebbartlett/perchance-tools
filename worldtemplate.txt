@@ -1,0 +1,42 @@
+WORLD TEMPLATE
+==============
+
+World Name: [Your World Name Here]
+Genre: [Fantasy / Sci-Fi / Modern / etc.]
+Tone: [Light / Dark / Epic / Cozy / etc.]
+
+Core Premise:
+- [One or two sentences describing the core idea of the world]
+
+Key Factions:
+- [Faction 1]: [Description]
+- [Faction 2]: [Description]
+- [Faction 3]: [Description]
+
+Important Locations:
+- [Location 1]: [Description]
+- [Location 2]: [Description]
+- [Location 3]: [Description]
+
+Major Conflicts:
+- [Conflict 1]: [Description]
+- [Conflict 2]: [Description]
+
+Magic / Technology System:
+- [Rules, limitations, costs, risks]
+
+Cultural Notes:
+- [Customs, taboos, holidays, social norms]
+
+Key NPCs:
+- [Name]: [Role, personality, goals]
+- [Name]: [Role, personality, goals]
+
+Lore Hooks:
+- [Mystery / unresolved event / prophecy / rumor]
+- [Ancient artifact / lost city / hidden power]
+
+Session / Story Seeds:
+- [Hook 1]
+- [Hook 2]
+- [Hook 3]
