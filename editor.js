@@ -1,5 +1,5 @@
 /************************************************************
- *  SmarHamr — EDITOR.JS (Aligned to Baseline HTML)
+ *  SmarHamr — EDITOR.JS (Aligned to Baseline HTML + Lore Fix + Message Scrubber)
  ************************************************************/
 
 let perchanceData = null;
@@ -44,7 +44,6 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
             loadCharacterIntoEditor(0);
         }
 
-        // Load lore after import
         loadCharacterLoreIntoEditor();
 
     } catch (err) {
@@ -390,6 +389,65 @@ if (processBtn) {
 }
 
 /************************************************************
+ *  MESSAGE SCRUBBER — REMOVE CHAT LOGS & CLUTTER
+ ************************************************************/
+function scrubMessagesAndClutter() {
+    if (!perchanceData) {
+        alert("No export loaded.");
+        return;
+    }
+
+    try {
+        const tables = perchanceData.data?.data;
+        if (!Array.isArray(tables)) {
+            alert("Dexie tables not found.");
+            return;
+        }
+
+        const removeTableNames = [
+            "messages",
+            "history",
+            "savedImages",
+            "imageTags",
+            "logs",
+            "conversation",
+            "chatHistory"
+        ];
+
+        perchanceData.data.data = tables.filter(t =>
+            !removeTableNames.includes(t.tableName)
+        );
+
+        const charactersTable = perchanceData.data.data.find(t => t.tableName === "characters");
+        if (charactersTable && Array.isArray(charactersTable.rows)) {
+            charactersTable.rows.forEach(row => {
+                delete row.embeddings;
+
+                if (Array.isArray(row.initialMessages)) {
+                    row.initialMessages = row.initialMessages.slice(0, 1);
+                }
+
+                delete row.messages;
+                delete row.chatHistory;
+                delete row.logs;
+            });
+        }
+
+        document.getElementById("messageScrubberStatus").textContent =
+            "Message scrubber complete.";
+
+        alert("Message scrubber complete.");
+
+    } catch (err) {
+        console.error("Message scrubber error:", err);
+        alert("Message scrubber failed.");
+    }
+}
+
+document.getElementById("messageScrubberBtn")
+    .addEventListener("click", scrubMessagesAndClutter);
+
+/************************************************************
  *  LORE TAB — LOAD & SAVE FROM LORE TABLE
  ************************************************************/
 function getLoreTable() {
@@ -442,4 +500,4 @@ document.getElementById("applyLoreBtn")
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Aligned + Lore Table Integrated) fully loaded.");
+console.log("SmarHamr editor.js (Aligned + Lore Fix + Message Scrubber) fully loaded.");
