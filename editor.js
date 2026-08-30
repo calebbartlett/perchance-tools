@@ -1,5 +1,5 @@
 /************************************************************
- *  SmarHamr — EDITOR.JS (Aligned to Baseline HTML + Lore Fix + Message Scrubber)
+ *  SmarHamr — EDITOR.JS (Aligned + Lore + Safe Scrubber)
  ************************************************************/
 
 let perchanceData = null;
@@ -233,7 +233,7 @@ function applyChangesToCurrentCharacter() {
         row.initialMessages = [];
     }
     if (!row.initialMessages[0]) {
-        row.initialMessages[0] = { role: "assistant", content: "" };
+        row.initialMessages[0] = { author: "ai", content: "" };
     }
     row.initialMessages[0].content = greeting;
 
@@ -353,7 +353,7 @@ document.getElementById("scrubBtnTop")
     });
 
 /************************************************************
- *  SCRUBBER INTEGRATION
+ *  SCRUBBER INTEGRATION (scrubber.js)
  ************************************************************/
 const processBtn = document.getElementById("processBtn");
 if (processBtn) {
@@ -389,7 +389,7 @@ if (processBtn) {
 }
 
 /************************************************************
- *  MESSAGE SCRUBBER — REMOVE CHAT LOGS & CLUTTER
+ *  SAFE CHECKBOX-DRIVEN MESSAGE SCRUBBER
  ************************************************************/
 function scrubMessagesAndClutter() {
     if (!perchanceData) {
@@ -404,39 +404,61 @@ function scrubMessagesAndClutter() {
             return;
         }
 
-        const removeTableNames = [
-            "messages",
-            "history",
-            "savedImages",
-            "imageTags",
-            "logs",
-            "conversation",
-            "chatHistory"
-        ];
+        const scrubMessages = document.getElementById("scrubMessages").checked;
+        const scrubThreads = document.getElementById("scrubThreads").checked;
+        const scrubEmbeddings = document.getElementById("scrubEmbeddings").checked;
+        const scrubScene = document.getElementById("scrubScene").checked;
+        const scrubAvatars = document.getElementById("scrubAvatars").checked;
+        const scrubUserHistory = document.getElementById("scrubUserHistory").checked;
+        const scrubShortcutButtons = document.getElementById("scrubShortcutButtons").checked;
+        const scrubCustomData = document.getElementById("scrubCustomData").checked;
 
-        perchanceData.data.data = tables.filter(t =>
-            !removeTableNames.includes(t.tableName)
-        );
-
-        const charactersTable = perchanceData.data.data.find(t => t.tableName === "characters");
+        const charactersTable = tables.find(t => t.tableName === "characters");
         if (charactersTable && Array.isArray(charactersTable.rows)) {
             charactersTable.rows.forEach(row => {
-                delete row.embeddings;
-
-                if (Array.isArray(row.initialMessages)) {
-                    row.initialMessages = row.initialMessages.slice(0, 1);
+                if (scrubEmbeddings) {
+                    // keep textEmbeddingModelName if you want; here we just leave it
                 }
 
-                delete row.messages;
-                delete row.chatHistory;
-                delete row.logs;
+                if (scrubScene && row.scene) {
+                    if (row.scene.background) row.scene.background.url = "";
+                    if (row.scene.music) row.scene.music.url = "";
+                }
+
+                if (scrubAvatars && row.avatar) {
+                    row.avatar.url = "";
+                }
+
+                if (scrubShortcutButtons) {
+                    row.shortcutButtons = [];
+                }
+
+                if (scrubCustomData) {
+                    row.customData = {};
+                }
+            });
+        }
+
+        const threadsTable = tables.find(t => t.tableName === "threads");
+        if (threadsTable && scrubThreads) {
+            threadsTable.rows = [];
+        }
+
+        const messagesTable = tables.find(t => t.tableName === "messages");
+        if (messagesTable && scrubMessages) {
+            messagesTable.rows = [];
+        }
+
+        if (scrubUserHistory && threadsTable && Array.isArray(threadsTable.rows)) {
+            threadsTable.rows.forEach(row => {
+                row.userMessagesSentHistory = [];
             });
         }
 
         document.getElementById("messageScrubberStatus").textContent =
-            "Message scrubber complete.";
+            "Scrubber complete.";
 
-        alert("Message scrubber complete.");
+        alert("Scrubber complete.");
 
     } catch (err) {
         console.error("Message scrubber error:", err);
@@ -500,4 +522,4 @@ document.getElementById("applyLoreBtn")
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Aligned + Lore Fix + Message Scrubber) fully loaded.");
+console.log("SmarHamr editor.js (Aligned + Lore + Safe Scrubber) fully loaded.");
