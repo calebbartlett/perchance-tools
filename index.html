@@ -266,22 +266,30 @@
     </div>
 
     <!-- ========================= -->
-    <!-- DEXIE VIEWER TAB -->
-    <!-- ========================= -->
-    <div id="dexie" class="tab-panel">
-      <h2>Dexie Viewer</h2>
-      <p>View raw or pretty JSON from your Perchance export.</p>
+<!-- DEXIE VIEWER TAB -->
+<!-- ========================= -->
+<div id="dexie" class="tab-panel">
+  <h2>Dexie Viewer</h2>
+  <p>View raw or pretty JSON from your Perchance export.</p>
 
-      <div style="margin-bottom:1rem;">
-        <button id="showRawBtn">Show Raw JSON</button>
-        <button id="showPrettyBtn">Show Pretty JSON</button>
-        <button id="downloadPrettyBtn">Download Pretty JSON</button>
-      </div>
+  <div style="margin-bottom:1rem;">
+    <button id="showRawBtn">Show Raw JSON</button>
+    <button id="showPrettyBtn">Show Pretty JSON</button>
+    <button id="downloadPrettyBtn">Download Pretty JSON</button>
+    <button id="downloadRawBtn">Download Raw JSON</button>
+  </div>
 
-      <pre id="jsonViewer" class="box" style="white-space:pre-wrap; margin-top:1rem;"></pre>
-    </div>
+  <!-- SEARCH BOX -->
+  <div style="margin-bottom:1rem;">
+    <input type="text" id="jsonSearchBox" placeholder="Search JSON...">
+    <button id="jsonSearchBtn">Find</button>
+    <span id="jsonSearchStatus"></span>
+  </div>
 
-  </div> <!-- end of #tab-content -->
+  <pre id="jsonViewer" class="box" style="white-space:pre-wrap; margin-top:1rem;"></pre>
+</div>
+
+
 
   <!-- ========================= -->
   <!-- SCRIPT INCLUDES -->
