@@ -1,5 +1,5 @@
 /************************************************************
- *  SmarHamr — EDITOR.JS (Aligned + Scratch Build + Lore)
+ *  SmarHamr — EDITOR.JS (Aligned + Scratch Build + Lore + World Template)
  ************************************************************/
 
 let perchanceData = null;
@@ -11,21 +11,39 @@ let charactersRows = [];
 let currentCharacterIndex = 0;
 
 /************************************************************
- *  SCRATCH BUILD — CREATE A NEW EMPTY PERCHANCE EXPORT
+ *  SCRATCH BUILD — LOAD scratch.json AND INITIALIZE
  ************************************************************/
-function createScratchBuild() {
-    const rawSkeleton =
-        "{\"formatName\":\"dexie\",\"formatVersion\":1,\"data\":{\"databaseName\":\"chatbot-ui-v1\",\"databaseVersion\":90,\"tables\":[{\"name\":\"characters\",\"schema\":\"++id,modelName,fitMessagesInContextMethod,uuid,creationTime,lastMessageTime,folderPath\",\"rowCount\":1},{\"name\":\"threads\",\"schema\":\"++id,name,characterId,creationTime,lastMessageTime,lastViewTime,folderPath\",\"rowCount\":1},{\"name\":\"messages\",\"schema\":\"++id,threadId,characterId,creationTime,order\",\"rowCount\":1},{\"name\":\"misc\",\"schema\":\"key\",\"rowCount\":4},{\"name\":\"summaries\",\"schema\":\"hash,threadId\",\"rowCount\":0},{\"name\":\"memories\",\"schema\":\"++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId\",\"rowCount\":0},{\"name\":\"lore\",\"schema\":\"++id,bookId,bookUrl\",\"rowCount\":0},{\"name\":\"textEmbeddingCache\",\"schema\":\"++id,textHash,&[textHash+modelName]\",\"rowCount\":0},{\"name\":\"textCompressionCache\",\"schema\":\"++id,uncompressedTextHash,&[uncompressedTextHash+modelName+tokenLimit]\",\"rowCount\":0}],\"data\":[{\"tableName\":\"characters\",\"inbound\":true,\"rows\":[{\"name\":\"Character Name\",\"roleInstruction\":\"Role Text Here\",\"maxParagraphCountPerMessage\":0,\"reminderMessage\":\"\",\"generalWritingInstructions\":\"\",\"messageWrapperStyle\":\"\",\"imagePromptPrefix\":\"\",\"imagePromptSuffix\":\"\",\"imagePromptTriggers\":\"\",\"fitMessagesInContextMethod\":\"summarizeOld\",\"autoGenerateMemories\":\"none\",\"customCode\":\"\",\"messageInputPlaceholder\":\"\",\"metaTitle\":\"\",\"metaDescription\":\"\",\"metaImage\":\"\",\"modelName\":\"perchance-ai\",\"temperature\":0.8,\"maxTokensPerMessage\":500,\"textEmbeddingModelName\":\"Xenova/bge-base-en-v1.5\",\"initialMessages\":[{\"author\":\"ai\",\"content\":\"Hello!\"}],\"shortcutButtons\":[],\"loreBookUrls\":[],\"avatar\":{\"url\":\"\",\"size\":1,\"shape\":\"square\"},\"scene\":{\"background\":{\"url\":\"\"},\"music\":{\"url\":\"\"}},\"userCharacter\":{\"avatar\":{}},\"systemCharacter\":{\"avatar\":{}},\"streamingResponse\":true,\"folderPath\":\"\",\"customData\":{},\"uuid\":null,\"creationTime\":0,\"lastMessageTime\":0,\"id\":1,\"$types\":{\"maxParagraphCountPerMessage\":\"undef\",\"initialMessages\":\"arrayNonindexKeys\",\"shortcutButtons\":\"arrayNonindexKeys\",\"loreBookUrls\":\"arrayNonindexKeys\"}}]},{\"tableName\":\"threads\",\"inbound\":true,\"rows\":[{\"name\":\"Thread Name\",\"characterId\":1,\"creationTime\":0,\"lastMessageTime\":0,\"lastViewTime\":0,\"isFav\":false,\"userCharacter\":{\"avatar\":{}},\"systemCharacter\":{\"avatar\":{}},\"character\":{\"avatar\":{}},\"modelName\":\"perchance-ai\",\"customCodeWindow\":{\"visible\":false,\"width\":null},\"customData\":{},\"folderPath\":\"\",\"loreBookId\":0,\"textEmbeddingModelName\":\"Xenova/bge-base-en-v1.5\",\"userMessagesSentHistory\":[],\"unsentMessageText\":\"\",\"shortcutButtons\":[],\"currentSummaryHashChain\":[],\"id\":1,\"$types\":{\"userMessagesSentHistory\":\"arrayNonindexKeys\",\"shortcutButtons\":\"arrayNonindexKeys\",\"currentSummaryHashChain\":\"arrayNonindexKeys\"}}]},{\"tableName\":\"messages\",\"inbound\":true,\"rows\":[{\"threadId\":1,\"message\":\"Hello!\",\"characterId\":1,\"hiddenFrom\":[],\"expectsReply\":0,\"creationTime\":0,\"variants\":[null],\"memoryIdBatchesUsed\":[],\"loreIdsUsed\":[],\"summaryHashUsed\":null,\"summariesUsed\":null,\"summariesEndingHere\":null,\"memoriesEndingHere\":null,\"memoryQueriesUsed\":[],\"messageIdsUsed\":[],\"name\":null,\"scene\":null,\"avatar\":{},\"customData\":{},\"wrapperStyle\":\"\",\"order\":0,\"instruction\":null,\"id\":1,\"$types\":{\"hiddenFrom\":\"arrayNonindexKeys\",\"expectsReply\":\"undef\",\"variants\":\"arrayNonindexKeys\",\"memoryIdBatchesUsed\":\"arrayNonindexKeys\",\"loreIdsUsed\":\"arrayNonindexKeys\",\"memoryQueriesUsed\":\"arrayNonindexKeys\",\"messageIdsUsed\":\"arrayNonindexKeys\"}}]},{\"tableName\":\"misc\",\"inbound\":true,\"rows\":[{\"key\":\"showInlineReminder\",\"value\":\"no\"},{\"key\":\"userAvatarUrl\",\"value\":\"\"},{\"key\":\"userName\",\"value\":\"User\"},{\"key\":\"userRoleInstruction\",\"value\":\"\"}]},{\"tableName\":\"summaries\",\"inbound\":true,\"rows\":[]},{\"tableName\":\"memories\",\"inbound\":true,\"rows\":[]},{\"tableName\":\"lore\",\"inbound\":true,\"rows\":[]},{\"tableName\":\"textEmbeddingCache\",\"inbound\":true,\"rows\":[]},{\"tableName\":\"textCompressionCache\",\"inbound\":true,\"rows\":[]}]} }";
+async function createScratchBuild() {
+    try {
+        const res = await fetch("scratch.json");
+        if (!res.ok) {
+            alert("Failed to load scratch.json");
+            return;
+        }
 
-    perchanceData = JSON.parse(rawSkeleton);
-    rawJsonText = rawSkeleton;
+        rawJsonText = await res.text();
+        perchanceData = JSON.parse(rawJsonText);
 
-    extractCharactersFromDexie();
-    populateCharacterDropdown();
-    loadCharacterIntoEditor(0);
-    loadCharacterLoreIntoEditor();
+        prettyJsonText = JSON.stringify(perchanceData, null, 2);
+        prettyJsonLines = prettyJsonText.split("\n");
 
-    document.getElementById("importStatus").textContent = "Scratch build loaded.";
+        document.getElementById("jsonViewer").textContent = rawJsonText;
+        document.getElementById("importStatus").textContent = "Scratch build loaded.";
+
+        extractCharactersFromDexie();
+        populateCharacterDropdown();
+
+        if (charactersRows.length > 0) {
+            currentCharacterIndex = 0;
+            loadCharacterIntoEditor(0);
+        }
+
+        loadCharacterLoreIntoEditor();
+
+    } catch (err) {
+        console.error("Scratch build error:", err);
+        alert("Error loading scratch.json");
+    }
 }
 
 document.getElementById("scratchBuildBtn")
@@ -62,6 +80,7 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
         populateCharacterDropdown();
 
         if (charactersRows.length > 0) {
+            currentCharacterIndex = 0;
             loadCharacterIntoEditor(0);
         }
 
@@ -361,8 +380,190 @@ function downloadUpdatedExport() {
     }
 }
 
-/************************************************************
- *  EXPORT — GENERATE .json.gz
- ************************************************************
-function downloadUpdatedExport() {
+document.getElementById("downloadUpdatedBtnTop")
+    .addEventListener("click", downloadUpdatedExport);
 
+/************************************************************
+ *  SCRUB BUTTON (SHELVED SCRUBBER)
+ ************************************************************/
+document.getElementById("scrubBtnTop")
+    .addEventListener("click", () => {
+        const btn = document.getElementById("processBtn");
+        if (btn) btn.click();
+    });
+
+/************************************************************
+ *  SAFE CHECKBOX-DRIVEN MESSAGE SCRUBBER (STRUCTURE-PRESERVING)
+ ************************************************************/
+function scrubMessagesAndClutter() {
+    if (!perchanceData) {
+        alert("No export loaded.");
+        return;
+    }
+
+    try {
+        const tables = perchanceData.data?.data;
+        if (!Array.isArray(tables)) {
+            alert("Dexie tables not found.");
+            return;
+        }
+
+        const scrubMessages = document.getElementById("scrubMessages").checked;
+        const scrubThreads = document.getElementById("scrubThreads").checked;
+        const scrubEmbeddings = document.getElementById("scrubEmbeddings").checked;
+        const scrubScene = document.getElementById("scrubScene").checked;
+        const scrubAvatars = document.getElementById("scrubAvatars").checked;
+        const scrubUserHistory = document.getElementById("scrubUserHistory").checked;
+        const scrubShortcutButtons = document.getElementById("scrubShortcutButtons").checked;
+        const scrubCustomData = document.getElementById("scrubCustomData").checked;
+
+        const charactersTable = tables.find(t => t.tableName === "characters");
+        if (charactersTable && Array.isArray(charactersTable.rows)) {
+            charactersTable.rows.forEach(row => {
+                if (scrubEmbeddings) {
+                    // intentionally left alone for now
+                }
+
+                if (scrubScene && row.scene) {
+                    if (row.scene.background) row.scene.background.url = "";
+                    if (row.scene.music) row.scene.music.url = "";
+                }
+
+                if (scrubAvatars && row.avatar) {
+                    row.avatar.url = "";
+                }
+
+                if (scrubShortcutButtons) {
+                    row.shortcutButtons = [];
+                }
+
+                if (scrubCustomData) {
+                    row.customData = {};
+                }
+            });
+        }
+
+        const threadsTable = tables.find(t => t.tableName === "threads");
+        if (threadsTable && scrubThreads) {
+            threadsTable.rows = [];
+        }
+
+        const messagesTable = tables.find(t => t.tableName === "messages");
+        if (messagesTable && scrubMessages) {
+            messagesTable.rows = [];
+        }
+
+        if (scrubUserHistory && threadsTable && Array.isArray(threadsTable.rows)) {
+            threadsTable.rows.forEach(row => {
+                row.userMessagesSentHistory = [];
+            });
+        }
+
+        document.getElementById("messageScrubberStatus").textContent =
+            "Scrubber complete.";
+
+        alert("Scrubber complete.");
+
+    } catch (err) {
+        console.error("Message scrubber error:", err);
+        alert("Message scrubber failed.");
+    }
+}
+
+document.getElementById("messageScrubberBtn")
+    .addEventListener("click", scrubMessagesAndClutter);
+
+/************************************************************
+ *  LORE TAB — LOAD & SAVE FROM LORE TABLE
+ ************************************************************/
+function getLoreTable() {
+    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
+        return null;
+    }
+    return perchanceData.data.data.find(t => t.tableName === "lore");
+}
+
+function findLoreRow() {
+    const loreTable = getLoreTable();
+    if (!loreTable || !Array.isArray(loreTable.rows)) return null;
+    return loreTable.rows[0] || null;
+}
+
+function loadCharacterLoreIntoEditor() {
+    const editor = document.getElementById("loreEditor");
+    if (!editor) return;
+
+    const loreRow = findLoreRow();
+
+    if (!loreRow) {
+        editor.value = "(no lore found in export)";
+        return;
+    }
+
+    if (typeof loreRow.text === "string") {
+        editor.value = loreRow.text;
+    } else {
+        editor.value = "(lore row found, but no 'text' field)";
+    }
+}
+
+function saveLoreToPerchance() {
+    const editor = document.getElementById("loreEditor");
+    if (!editor) {
+        alert("Lore editor not found.");
+        return;
+    }
+
+    const loreTable = getLoreTable();
+    if (!loreTable) {
+        alert("Lore table not found.");
+        return;
+    }
+
+    if (!Array.isArray(loreTable.rows) || loreTable.rows.length === 0) {
+        loreTable.rows = [{
+            id: 1,
+            bookId: 0,
+            bookUrl: null,
+            text: editor.value
+        }];
+    } else {
+        const loreRow = loreTable.rows[0];
+        loreRow.text = editor.value;
+    }
+
+    alert("Lore saved.");
+}
+
+document.getElementById("applyLoreBtn")
+    .addEventListener("click", saveLoreToPerchance);
+
+/************************************************************
+ *  WORLD TEMPLATE LOADER (EXTERNAL FILE)
+ ************************************************************/
+document.getElementById("generateLoreTemplateBtn")
+    .addEventListener("click", async () => {
+        const editor = document.getElementById("loreEditor");
+        if (!editor) return;
+
+        try {
+            const res = await fetch("worldtemplate.txt");
+            if (!res.ok) {
+                alert("Could not load worldtemplate.txt");
+                return;
+            }
+
+            const templateText = await res.text();
+            editor.value = templateText;
+
+            alert("World template loaded.");
+        } catch (err) {
+            console.error("World template load error:", err);
+            alert("Error loading worldtemplate.txt");
+        }
+    });
+
+/************************************************************
+ *  END OF FILE
+ ************************************************************/
+console.log("SmarHamr editor.js (Aligned + Scratch Build + Lore + World Template) loaded.");
