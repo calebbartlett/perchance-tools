@@ -321,15 +321,54 @@
       </div>
     </div>
 
-    <!-- LORE TAB -->
-    <div id="lore" class="tab-panel">
-      <h2>Lore</h2>
+/************************************************************
+ *  LORE TAB — LOAD & SAVE FROM LORE TABLE
+ ************************************************************/
+function getLoreTable() {
+    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
+        return null;
+    }
+    return perchanceData.data.data.find(t => t.tableName === "lore");
+}
 
-      <button id="applyLoreBtn" style="margin-bottom:1rem;">Apply Lore Changes</button>
-      <button id="generateLoreTemplateBtn" style="margin-bottom:1rem;">Generate World Template</button>
+function findLoreRow() {
+    const loreTable = getLoreTable();
+    if (!loreTable || !Array.isArray(loreTable.rows)) return null;
 
-      <textarea id="loreEditor" rows="20" style="width:100%;"></textarea>
-    </div>
+    // Search for known markers
+    return loreTable.rows.find(r =>
+        typeof r.text === "string" &&
+        (r.text.includes("yggdrasil") || r.text.includes("118175"))
+    );
+}
+
+function loadCharacterLoreIntoEditor() {
+    const loreRow = findLoreRow();
+    const editor = document.getElementById("loreEditor");
+
+    if (!editor) return;
+
+    if (!loreRow) {
+        editor.value = "(no lore found in export)";
+        return;
+    }
+
+    editor.value = loreRow.text;
+}
+
+function saveLoreToPerchance() {
+    const loreRow = findLoreRow();
+    const editor = document.getElementById("loreEditor");
+
+    if (!loreRow || !editor) {
+        alert("Lore row not found.");
+        return;
+    }
+
+    loreRow.text = editor.value;
+    alert("Lore saved.");
+}
+
 
     <!-- VIEWER TAB -->
     <div id="viewer" class="tab-panel">
