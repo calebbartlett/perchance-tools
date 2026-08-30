@@ -1,19 +1,19 @@
-// ===============================
-// BASIC EDITOR.JS SKELETON
-// ===============================
+// ======================================================
+//  SMARHAMR STUDIO — COMPLETE EDITOR.JS (CORRECTED)
+// ======================================================
 
-// Global export object (loaded from file)
+// Global export object
 let currentExport = null;
 
-// Global characters array (from Dexie "characters" table)
+// Characters array
 let characters = [];
 
-// Global memory table (from Dexie "memories" table)
-let memoryTable = null;
+// Memories array
+let memoryTable = [];
 
-// ===============================
-// TAB SWITCHING
-// ===============================
+// ======================================================
+//  TAB SWITCHING
+// ======================================================
 document.querySelectorAll(".tab-button").forEach(btn => {
   btn.addEventListener("click", () => {
     const target = btn.getAttribute("data-target");
@@ -24,9 +24,9 @@ document.querySelectorAll(".tab-button").forEach(btn => {
   });
 });
 
-// ===============================
-// LOAD EXPORT (.json.gz or .json)
-// ===============================
+// ======================================================
+//  LOAD EXPORT (.json or .json.gz)
+// ======================================================
 document.getElementById("loadExportBtn")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -40,13 +40,15 @@ document.getElementById("loadExportBtn")?.addEventListener("change", async (e) =
   }
 
   extractCharactersFromDexie();
+  extractMemoriesFromDexie();
   initMemoryTab();
+
   alert("Export loaded.");
 });
 
-// ===============================
-// SAVE EXPORT
-// ===============================
+// ======================================================
+//  SAVE EXPORT
+// ======================================================
 document.getElementById("saveExportBtn")?.addEventListener("click", () => {
   if (!currentExport) {
     alert("No export loaded.");
@@ -62,30 +64,50 @@ document.getElementById("saveExportBtn")?.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// ===============================
-// CHARACTERS EXTRACTION
-// ===============================
+// ======================================================
+//  CHARACTERS EXTRACTION (robust)
+// ======================================================
 function extractCharactersFromDexie() {
-  const charTable = currentExport.data.data.find(t => t.tableName === "characters");
+  const charTable = currentExport?.data?.data?.find(t =>
+    t.tableName.toLowerCase() === "characters" ||
+    t.tableName.toLowerCase() === "character"
+  );
+
   characters = charTable ? charTable.rows : [];
+
+  console.log("Characters loaded:", characters);
 }
 
-// ===============================
-// MEMORY TAB LOGIC
-// ===============================
-
-// Load memory table from Dexie export
+// ======================================================
+//  MEMORIES EXTRACTION (robust)
+// ======================================================
 function extractMemoriesFromDexie() {
-  const mem = currentExport.data.data.find(t => t.tableName === "memories");
-  memoryTable = mem ? mem.rows : [];
+  const memTable = currentExport?.data?.data?.find(t =>
+    t.tableName.toLowerCase() === "memories" ||
+    t.tableName.toLowerCase() === "memory"
+  );
+
+  memoryTable = memTable ? memTable.rows : [];
+
+  console.log("Memories loaded:", memoryTable);
 }
 
-// Populate character dropdown
+// ======================================================
+//  POPULATE CHARACTER DROPDOWN
+// ======================================================
 function populateMemoryCharacterDropdown() {
   const sel = document.getElementById("memoryCharacterSelect");
-  if (!sel) return;
+  if (!sel) {
+    console.error("Dropdown element missing in HTML.");
+    return;
+  }
 
   sel.innerHTML = "";
+
+  if (characters.length === 0) {
+    sel.innerHTML = "<option>No characters found</option>";
+    return;
+  }
 
   characters.forEach(char => {
     const opt = document.createElement("option");
@@ -97,19 +119,26 @@ function populateMemoryCharacterDropdown() {
   sel.onchange = () => loadMemoriesForCharacter(parseInt(sel.value));
 }
 
-// Load memories for selected character
+// ======================================================
+//  LOAD MEMORIES FOR SELECTED CHARACTER
+// ======================================================
 function loadMemoriesForCharacter(characterId) {
   const editor = document.getElementById("memoryEditor");
   const search = document.getElementById("memorySearch");
+
   if (!editor || !search) return;
 
   search.value = "";
 
   const mems = memoryTable.filter(m => m.characterId === characterId);
   editor.value = mems.map(m => m.text).join("\n");
+
+  console.log(`Loaded ${mems.length} memories for character ${characterId}`);
 }
 
-// Search memories (live filter)
+// ======================================================
+//  SEARCH MEMORIES
+// ======================================================
 document.getElementById("memorySearch")?.addEventListener("input", () => {
   const query = document.getElementById("memorySearch").value.toLowerCase();
   const editor = document.getElementById("memoryEditor");
@@ -120,7 +149,9 @@ document.getElementById("memorySearch")?.addEventListener("input", () => {
   editor.value = filtered.join("\n");
 });
 
-// Add new memory
+// ======================================================
+//  ADD NEW MEMORY
+// ======================================================
 document.getElementById("addMemoryBtn")?.addEventListener("click", () => {
   const newTextEl = document.getElementById("newMemoryText");
   const editor = document.getElementById("memoryEditor");
@@ -133,8 +164,8 @@ document.getElementById("addMemoryBtn")?.addEventListener("click", () => {
 
   const charId = parseInt(sel.value);
 
-  // Add to memory table
   const nextId = memoryTable.length ? Math.max(...memoryTable.map(m => m.id)) + 1 : 0;
+
   memoryTable.push({
     id: nextId,
     characterId: charId,
@@ -142,26 +173,26 @@ document.getElementById("addMemoryBtn")?.addEventListener("click", () => {
     timestamp: Date.now()
   });
 
-  // Append to editor
   editor.value += (editor.value ? "\n" : "") + newText;
-
   newTextEl.value = "";
 });
 
-// Save all changes
+// ======================================================
+//  SAVE ALL CHANGES
+// ======================================================
 document.getElementById("saveMemoryBtn")?.addEventListener("click", () => {
   const sel = document.getElementById("memoryCharacterSelect");
   const editor = document.getElementById("memoryEditor");
+
   if (!sel || !editor) return;
 
   const charId = parseInt(sel.value);
   const editorLines = editor.value.split("\n").map(l => l.trim()).filter(l => l);
 
-  // Remove old memories for this character
   memoryTable = memoryTable.filter(m => m.characterId !== charId);
 
-  // Add rewritten memories
   let nextId = memoryTable.length ? Math.max(...memoryTable.map(m => m.id)) + 1 : 0;
+
   editorLines.forEach(line => {
     memoryTable.push({
       id: nextId++,
@@ -171,8 +202,11 @@ document.getElementById("saveMemoryBtn")?.addEventListener("click", () => {
     });
   });
 
-  // Write back into export
-  const memTable = currentExport.data.data.find(t => t.tableName === "memories");
+  const memTable = currentExport.data.data.find(t =>
+    t.tableName.toLowerCase() === "memories" ||
+    t.tableName.toLowerCase() === "memory"
+  );
+
   if (memTable) {
     memTable.rows = memoryTable;
   } else {
@@ -185,9 +219,16 @@ document.getElementById("saveMemoryBtn")?.addEventListener("click", () => {
   alert("Memories saved.");
 });
 
-// Initialize memory tab
+// ======================================================
+//  INITIALIZE MEMORY TAB
+// ======================================================
 function initMemoryTab() {
-  if (!currentExport) return;
+  if (!currentExport) {
+    console.warn("No export loaded — memory tab cannot initialize.");
+    return;
+  }
+
+  extractCharactersFromDexie();
   extractMemoriesFromDexie();
   populateMemoryCharacterDropdown();
 
@@ -196,11 +237,10 @@ function initMemoryTab() {
   }
 }
 
-// ===============================
-// INITIALIZATION
-// ===============================
+// ======================================================
+//  INITIAL PAGE LOAD
+// ======================================================
 window.addEventListener("DOMContentLoaded", () => {
-  // Default: show first tab
   const firstPanel = document.querySelector(".tab-panel");
   if (firstPanel) firstPanel.style.display = "block";
 });
