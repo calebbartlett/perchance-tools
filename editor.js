@@ -1,5 +1,5 @@
 /************************************************************
- *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
+ *  SMarHamr — FULL EDITOR.JS (Unified Working Version)
  ************************************************************/
 
 let perchanceData = null;
@@ -42,7 +42,7 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
         if (charactersRows.length > 0) {
             loadCharacterIntoEditor(0);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+            loadCharacterLoreIntoEditor();   // <-- CRITICAL
         }
 
     } catch (err) {
@@ -77,6 +77,55 @@ document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
     a.download = "pretty-export.json";
     a.click();
     URL.revokeObjectURL(url);
+});
+
+/************************************************************
+ *  DOWNLOAD RAW JSON
+ ************************************************************/
+document.getElementById("downloadRawBtn").addEventListener("click", () => {
+    if (!rawJsonText) return;
+    const blob = new Blob([rawJsonText], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "raw-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+/************************************************************
+ *  JSON SEARCH
+ ************************************************************/
+document.getElementById("jsonSearchBtn").addEventListener("click", () => {
+    const query = document.getElementById("jsonSearchBox").value.trim();
+    const viewer = document.getElementById("jsonViewer");
+    const status = document.getElementById("jsonSearchStatus");
+
+    if (!query) {
+        status.textContent = "Enter text to search.";
+        return;
+    }
+
+    const text = viewer.textContent;
+    const index = text.indexOf(query);
+
+    if (index === -1) {
+        status.textContent = "Not found.";
+        return;
+    }
+
+    status.textContent = "Found! Highlighted.";
+
+    const before = text.substring(0, index);
+    const match = text.substring(index, index + query.length);
+    const after = text.substring(index + query.length);
+
+    viewer.innerHTML =
+        before +
+        "<mark style='background:yellow;'>" +
+        match +
+        "</mark>" +
+        after;
 });
 
 /************************************************************
@@ -130,7 +179,7 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+            loadCharacterLoreIntoEditor();   // <-- CRITICAL
         }
     });
 }
@@ -311,7 +360,16 @@ function loadCharacterLoreIntoEditor() {
     const row = charactersRows[currentCharacterIndex];
     if (!row) return;
 
-    const loreText = row.lore ?? "";
+    const loreText =
+        row.lore ??
+        row.backstory ??
+        row.biography ??
+        row.description ??
+        row.notes ??
+        row.persona ??
+        row.systemPrompt ??
+        "";
+
     document.getElementById("loreEditor").value = loreText;
 }
 
@@ -471,7 +529,7 @@ if (processBtn) {
 
             if (charactersRows.length > 0) {
                 loadCharacterIntoEditor(0);
-                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+                loadCharacterLoreIntoEditor();   // <-- CRITICAL
             }
 
             document.getElementById("status").textContent = "Scrub complete.";
@@ -485,4 +543,4 @@ if (processBtn) {
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
+console.log("SmarHamr editor.js (Unified Working Version) fully loaded.");
