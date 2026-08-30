@@ -1,246 +1,274 @@
-// ======================================================
-//  SMARHAMR STUDIO — COMPLETE EDITOR.JS (CORRECTED)
-// ======================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SmarHamr Perchance Export Editor</title>
 
-// Global export object
-let currentExport = null;
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+    }
 
-// Characters array
-let characters = [];
+    .grid-shell {
+        display: grid;
+        grid-template-columns: 280px 1fr 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+    }
 
-// Memories array
-let memoryTable = [];
+    .sidebar {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        background: #222;
+        color: #fff;
+        padding: 1rem;
+    }
 
-// ======================================================
-//  TAB SWITCHING
-// ======================================================
-document.querySelectorAll(".tab-button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const target = btn.getAttribute("data-target");
+    .tabs {
+        grid-column: 2 / span 2;
+        background: #ddd;
+        padding: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
 
-    document.querySelectorAll(".tab-panel").forEach(panel => {
-      panel.style.display = panel.id === target ? "block" : "none";
+    .tab-button {
+        padding: 0.5rem 1rem;
+        background: #bbb;
+        border: none;
+        cursor: pointer;
+    }
+
+    .tab-button.active {
+        background: #fff;
+        border-bottom: 2px solid #000;
+    }
+
+    .tab-panel {
+        grid-column: 2 / span 2;
+        display: none;
+        padding: 1rem;
+        background: #fff;
+        overflow-y: auto;
+    }
+
+    .tab-panel.active {
+        display: block;
+    }
+
+    .box {
+        background: #eee;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        white-space: pre-wrap;
+    }
+
+    textarea {
+        width: 100%;
+        height: 300px;
+    }
+
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+</style>
+</head>
+<body>
+
+<div class="grid-shell">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>SmarHamr</h2>
+
+        <p><strong>Import Perchance Export</strong></p>
+        <input type="file" id="fileInput">
+        <p id="importStatus"></p>
+
+        <hr>
+
+        <button id="downloadUpdatedBtnTop">Download Updated Export</button>
+        <button id="scrubBtnTop">Run Scrubber</button>
+
+        <hr>
+
+        <p><strong>Character Select</strong></p>
+        <select id="characterSelect"></select>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-button active" data-tab="profile">Profile</button>
+        <button class="tab-button" data-tab="lore">Lore</button>
+        <button class="tab-button" data-tab="memory">Memory</button>
+        <button class="tab-button" data-tab="dexie">Dexie Viewer</button>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="profile" class="tab-panel active">
+        <h2>Character Profile</h2>
+
+        <label>Name</label>
+        <input type="text" id="charName">
+
+        <label>Role Instructions</label>
+        <textarea id="charRoleInstructions"></textarea>
+
+        <label>Reminder Message</label>
+        <textarea id="charReminder"></textarea>
+
+        <label>General Writing Instructions</label>
+        <textarea id="charGeneralWriting"></textarea>
+
+        <label>Greeting</label>
+        <textarea id="charGreeting"></textarea>
+
+        <hr>
+
+        <label>Message Wrapper Style</label>
+        <input type="text" id="charMessageWrapperStyle">
+
+        <label>Image Prompt Prefix</label>
+        <input type="text" id="charImagePromptPrefix">
+
+        <label>Image Prompt Suffix</label>
+        <input type="text" id="charImagePromptSuffix">
+
+        <label>Image Prompt Triggers</label>
+        <input type="text" id="charImagePromptTriggers">
+
+        <label>Message Input Placeholder</label>
+        <input type="text" id="charMessageInputPlaceholder">
+
+        <hr>
+
+        <label>Model Name</label>
+        <input type="text" id="charModelName">
+
+        <label>Temperature</label>
+        <input type="number" id="charTemperature">
+
+        <label>Max Tokens Per Message</label>
+        <input type="number" id="charMaxTokensPerMessage">
+
+        <label>Text Embedding Model Name</label>
+        <input type="text" id="charTextEmbeddingModelName">
+
+        <label>Fit Messages Method</label>
+        <input type="text" id="charFitMessagesMethod">
+
+        <label>Auto Generate Memories</label>
+        <input type="text" id="charAutoGenerateMemories">
+
+        <hr>
+
+        <label>Avatar URL</label>
+        <input type="text" id="charAvatarUrl">
+
+        <label>Avatar Size</label>
+        <input type="number" id="charAvatarSize">
+
+        <label>Avatar Shape</label>
+        <input type="text" id="charAvatarShape">
+
+        <label>Scene Background URL</label>
+        <input type="text" id="charSceneBackgroundUrl">
+
+        <label>Scene Music URL</label>
+        <input type="text" id="charSceneMusicUrl">
+
+        <hr>
+
+        <label>Meta Title</label>
+        <input type="text" id="charMetaTitle">
+
+        <label>Meta Description</label>
+        <input type="text" id="charMetaDescription">
+
+        <label>Meta Image</label>
+        <input type="text" id="charMetaImage">
+
+        <label>Streaming Response</label>
+        <input type="text" id="charStreamingResponse">
+
+        <label>Folder Path</label>
+        <input type="text" id="charFolderPath">
+
+        <button id="applyProfileBtn">Apply Profile Changes</button>
+
+        <p id="profileStatus"></p>
+    </div>
+
+    <!-- LORE TAB -->
+    <div id="lore" class="tab-panel">
+        <h2>Global Lore</h2>
+
+        <textarea id="loreEditor"></textarea>
+
+        <button id="applyLoreBtn">Save Lore</button>
+        <button id="generateLoreTemplateBtn">Insert World Template</button>
+    </div>
+
+    <!-- MEMORY TAB -->
+    <div id="memory" class="tab-panel">
+        <h2>Memory</h2>
+        <p>Memory editing not implemented yet.</p>
+        <button id="applyMemoryBtn">Apply Memory Changes</button>
+    </div>
+
+    <!-- DEXIE VIEWER TAB -->
+    <div id="dexie" class="tab-panel">
+        <h2>Dexie Viewer</h2>
+
+        <button id="showRawBtn">Show Raw JSON</button>
+        <button id="showPrettyBtn">Show Pretty JSON</button>
+        <button id="downloadPrettyBtn">Download Pretty JSON</button>
+        <button id="downloadRawBtn">Download Raw JSON</button>
+
+        <hr>
+
+        <input type="text" id="jsonSearchBox" placeholder="Search JSON...">
+        <button id="jsonSearchBtn">Find</button>
+        <span id="jsonSearchStatus"></span>
+
+        <pre id="jsonViewer" class="box"></pre>
+    </div>
+
+</div> <!-- end grid-shell -->
+
+<!-- SCRIPTS -->
+<script src="pako.min.js"></script>
+<script src="scrubber.js"></script>
+<script src="editor.js"></script>
+
+<!-- TAB SWITCHING -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.tab-button');
+    const panels = document.querySelectorAll('.tab-panel');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const tab = btn.dataset.tab;
+
+            panels.forEach(panel => panel.classList.remove('active'));
+            const activePanel = document.getElementById(tab);
+            if (activePanel) activePanel.classList.add('active');
+
+            if (tab === "lore") {
+                loadGlobalLoreIntoEditor();
+            }
+        });
     });
-  });
 });
+</script>
 
-// ======================================================
-//  LOAD EXPORT (.json or .json.gz)
-// ======================================================
-document.getElementById("loadExportBtn")?.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const text = await file.text();
-  try {
-    currentExport = JSON.parse(text);
-  } catch (err) {
-    alert("Invalid JSON export.");
-    return;
-  }
-
-  extractCharactersFromDexie();
-  extractMemoriesFromDexie();
-  initMemoryTab();
-
-  alert("Export loaded.");
-});
-
-// ======================================================
-//  SAVE EXPORT
-// ======================================================
-document.getElementById("saveExportBtn")?.addEventListener("click", () => {
-  if (!currentExport) {
-    alert("No export loaded.");
-    return;
-  }
-
-  const blob = new Blob([JSON.stringify(currentExport, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "perchance-export.json";
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// ======================================================
-//  CHARACTERS EXTRACTION (robust)
-// ======================================================
-function extractCharactersFromDexie() {
-  const charTable = currentExport?.data?.data?.find(t =>
-    t.tableName.toLowerCase() === "characters" ||
-    t.tableName.toLowerCase() === "character"
-  );
-
-  characters = charTable ? charTable.rows : [];
-
-  console.log("Characters loaded:", characters);
-}
-
-// ======================================================
-//  MEMORIES EXTRACTION (robust)
-// ======================================================
-function extractMemoriesFromDexie() {
-  const memTable = currentExport?.data?.data?.find(t =>
-    t.tableName.toLowerCase() === "memories" ||
-    t.tableName.toLowerCase() === "memory"
-  );
-
-  memoryTable = memTable ? memTable.rows : [];
-
-  console.log("Memories loaded:", memoryTable);
-}
-
-// ======================================================
-//  POPULATE CHARACTER DROPDOWN
-// ======================================================
-function populateMemoryCharacterDropdown() {
-  const sel = document.getElementById("memoryCharacterSelect");
-  if (!sel) {
-    console.error("Dropdown element missing in HTML.");
-    return;
-  }
-
-  sel.innerHTML = "";
-
-  if (characters.length === 0) {
-    sel.innerHTML = "<option>No characters found</option>";
-    return;
-  }
-
-  characters.forEach(char => {
-    const opt = document.createElement("option");
-    opt.value = char.id;
-    opt.textContent = char.name || `Character ${char.id}`;
-    sel.appendChild(opt);
-  });
-
-  sel.onchange = () => loadMemoriesForCharacter(parseInt(sel.value));
-}
-
-// ======================================================
-//  LOAD MEMORIES FOR SELECTED CHARACTER
-// ======================================================
-function loadMemoriesForCharacter(characterId) {
-  const editor = document.getElementById("memoryEditor");
-  const search = document.getElementById("memorySearch");
-
-  if (!editor || !search) return;
-
-  search.value = "";
-
-  const mems = memoryTable.filter(m => m.characterId === characterId);
-  editor.value = mems.map(m => m.text).join("\n");
-
-  console.log(`Loaded ${mems.length} memories for character ${characterId}`);
-}
-
-// ======================================================
-//  SEARCH MEMORIES
-// ======================================================
-document.getElementById("memorySearch")?.addEventListener("input", () => {
-  const query = document.getElementById("memorySearch").value.toLowerCase();
-  const editor = document.getElementById("memoryEditor");
-  if (!editor) return;
-
-  const lines = editor.value.split("\n");
-  const filtered = lines.filter(line => line.toLowerCase().includes(query));
-  editor.value = filtered.join("\n");
-});
-
-// ======================================================
-//  ADD NEW MEMORY
-// ======================================================
-document.getElementById("addMemoryBtn")?.addEventListener("click", () => {
-  const newTextEl = document.getElementById("newMemoryText");
-  const editor = document.getElementById("memoryEditor");
-  const sel = document.getElementById("memoryCharacterSelect");
-
-  if (!newTextEl || !editor || !sel) return;
-
-  const newText = newTextEl.value.trim();
-  if (!newText) return;
-
-  const charId = parseInt(sel.value);
-
-  const nextId = memoryTable.length ? Math.max(...memoryTable.map(m => m.id)) + 1 : 0;
-
-  memoryTable.push({
-    id: nextId,
-    characterId: charId,
-    text: newText,
-    timestamp: Date.now()
-  });
-
-  editor.value += (editor.value ? "\n" : "") + newText;
-  newTextEl.value = "";
-});
-
-// ======================================================
-//  SAVE ALL CHANGES
-// ======================================================
-document.getElementById("saveMemoryBtn")?.addEventListener("click", () => {
-  const sel = document.getElementById("memoryCharacterSelect");
-  const editor = document.getElementById("memoryEditor");
-
-  if (!sel || !editor) return;
-
-  const charId = parseInt(sel.value);
-  const editorLines = editor.value.split("\n").map(l => l.trim()).filter(l => l);
-
-  memoryTable = memoryTable.filter(m => m.characterId !== charId);
-
-  let nextId = memoryTable.length ? Math.max(...memoryTable.map(m => m.id)) + 1 : 0;
-
-  editorLines.forEach(line => {
-    memoryTable.push({
-      id: nextId++,
-      characterId: charId,
-      text: line,
-      timestamp: Date.now()
-    });
-  });
-
-  const memTable = currentExport.data.data.find(t =>
-    t.tableName.toLowerCase() === "memories" ||
-    t.tableName.toLowerCase() === "memory"
-  );
-
-  if (memTable) {
-    memTable.rows = memoryTable;
-  } else {
-    currentExport.data.data.push({
-      tableName: "memories",
-      rows: memoryTable
-    });
-  }
-
-  alert("Memories saved.");
-});
-
-// ======================================================
-//  INITIALIZE MEMORY TAB
-// ======================================================
-function initMemoryTab() {
-  if (!currentExport) {
-    console.warn("No export loaded — memory tab cannot initialize.");
-    return;
-  }
-
-  extractCharactersFromDexie();
-  extractMemoriesFromDexie();
-  populateMemoryCharacterDropdown();
-
-  if (characters.length > 0) {
-    loadMemoriesForCharacter(characters[0].id);
-  }
-}
-
-// ======================================================
-//  INITIAL PAGE LOAD
-// ======================================================
-window.addEventListener("DOMContentLoaded", () => {
-  const firstPanel = document.querySelector(".tab-panel");
-  if (firstPanel) firstPanel.style.display = "block";
-});
+</body>
+</html>
