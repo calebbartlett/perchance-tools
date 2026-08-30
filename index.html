@@ -25,6 +25,7 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       margin-bottom: 0.5rem;
+      flex-wrap: wrap;
     }
 
     #importStatus {
@@ -120,6 +121,7 @@
     <button id="applyChangesBtnTop">Apply</button>
     <button id="downloadUpdatedBtnTop">Export</button>
     <button id="scrubBtnTop">Scrub</button>
+    <button id="scratchBuildBtn">New Scratch Build</button>
   </div>
 
   <span id="importStatus">No file loaded</span>
@@ -352,42 +354,43 @@
     </div>
 
     <!-- EXPORT TOOLS TAB -->
-<div id="exportTools" class="tab-panel">
-  <h2>Export Tools</h2>
+    <div id="exportTools" class="tab-panel">
+      <h2>Export Tools</h2>
 
-  <div class="box">
-    <h3>Perchance Export Scrubber</h3>
-    <button id="processBtn">Process File</button>
-    <p id="status"></p>
+      <div class="box">
+        <h3>Perchance Export Scrubber</h3>
+        <button id="processBtn">Process File</button>
+        <p id="status"></p>
+      </div>
+
+      <div class="box">
+        <h3>Message Scrubber (User Controlled)</h3>
+
+        <label><input type="checkbox" id="scrubMessages"> Remove Messages</label><br>
+        <label><input type="checkbox" id="scrubThreads"> Remove Threads</label><br>
+        <label><input type="checkbox" id="scrubEmbeddings"> Remove Embeddings</label><br>
+        <label><input type="checkbox" id="scrubScene"> Remove Scene (background/music)</label><br>
+        <label><input type="checkbox" id="scrubAvatars"> Remove Avatars</label><br>
+        <label><input type="checkbox" id="scrubUserHistory"> Remove User Message History</label><br>
+        <label><input type="checkbox" id="scrubShortcutButtons"> Remove Shortcut Buttons</label><br>
+        <label><input type="checkbox" id="scrubCustomData"> Remove Custom Data</label><br>
+
+        <button id="messageScrubberBtn">Run Message Scrubber</button>
+        <p id="messageScrubberStatus"></p>
+      </div>
+
+      <div class="box">
+        <h3>Stats</h3>
+        <p><strong>Original size:</strong> <span id="origSize">-</span></p>
+        <p><strong>Cleaned size:</strong> <span id="cleanSize">-</span></p>
+        <p><strong>Reduction:</strong> <span id="reduction">-</span></p>
+        <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
+        <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
+      </div>
+
+    </div>
+
   </div>
-
-  <div class="box">
-    <h3>Message Scrubber (User Controlled)</h3>
-
-    <label><input type="checkbox" id="scrubMessages"> Remove Messages</label><br>
-    <label><input type="checkbox" id="scrubThreads"> Remove Threads</label><br>
-    <label><input type="checkbox" id="scrubEmbeddings"> Remove Embeddings</label><br>
-    <label><input type="checkbox" id="scrubScene"> Remove Scene (background/music)</label><br>
-    <label><input type="checkbox" id="scrubAvatars"> Remove Avatars</label><br>
-    <label><input type="checkbox" id="scrubUserHistory"> Remove User Message History</label><br>
-    <label><input type="checkbox" id="scrubShortcutButtons"> Remove Shortcut Buttons</label><br>
-    <label><input type="checkbox" id="scrubCustomData"> Remove Custom Data</label><br>
-
-    <button id="messageScrubberBtn">Run Message Scrubber</button>
-    <p id="messageScrubberStatus"></p>
-  </div>
-
-  <div class="box">
-    <h3>Stats</h3>
-    <p><strong>Original size:</strong> <span id="origSize">-</span></p>
-    <p><strong>Cleaned size:</strong> <span id="cleanSize">-</span></p>
-    <p><strong>Reduction:</strong> <span id="reduction">-</span></p>
-    <p><strong>SavedImages Removed:</strong> <span id="savedImagesCount">-</span></p>
-    <p><strong>Image Tags Removed:</strong> <span id="imageTagCount">-</span></p>
-  </div>
-
-</div>
-
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
