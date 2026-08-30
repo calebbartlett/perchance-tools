@@ -1,5 +1,5 @@
 /************************************************************
- *  SMarHamr — FULL EDITOR.JS (Global Lore Mode)
+ *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
  ************************************************************/
 
 let perchanceData = null;
@@ -41,18 +41,16 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
         populateCharacterDropdown();
 
         if (charactersRows.length > 0) {
-            currentCharacterIndex = 0;
             loadCharacterIntoEditor(0);
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
-
-        // Load global lore into Lore tab
-        loadGlobalLoreIntoEditor();
 
     } catch (err) {
         console.error("Error loading export:", err);
         document.getElementById("importStatus").textContent = "Error loading file";
     }
 });
+
 /************************************************************
  *  JSON VIEWER BUTTONS
  ************************************************************/
@@ -81,54 +79,6 @@ document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
     URL.revokeObjectURL(url);
 });
 
-/************************************************************
- *  DOWNLOAD RAW JSON
- ************************************************************/
-document.getElementById("downloadRawBtn").addEventListener("click", () => {
-    if (!rawJsonText) return;
-    const blob = new Blob([rawJsonText], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "raw-export.json";
-    a.click();
-    URL.revokeObjectURL(url);
-});
-
-/************************************************************
- *  JSON SEARCH
- ************************************************************/
-document.getElementById("jsonSearchBtn").addEventListener("click", () => {
-    const query = document.getElementById("jsonSearchBox").value.trim();
-    const viewer = document.getElementById("jsonViewer");
-    const status = document.getElementById("jsonSearchStatus");
-
-    if (!query) {
-        status.textContent = "Enter text to search.";
-        return;
-    }
-
-    const text = viewer.textContent;
-    const index = text.indexOf(query);
-
-    if (index === -1) {
-        status.textContent = "Not found.";
-        return;
-    }
-
-    status.textContent = "Found! Highlighted.";
-
-    const before = text.substring(0, index);
-    const match = text.substring(index, index + query.length);
-    const after = text.substring(index + query.length);
-
-    viewer.innerHTML =
-        before +
-        "<mark style='background:yellow;'>" +
-        match +
-        "</mark>" +
-        after;
-});
 /************************************************************
  *  CHARACTER EXTRACTION
  ************************************************************/
@@ -180,11 +130,11 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
-            // Lore is global, but we can still refresh it when switching
-            loadGlobalLoreIntoEditor();
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
     });
 }
+
 /************************************************************
  *  LOAD CHARACTER INTO EDITOR
  ************************************************************/
@@ -255,6 +205,7 @@ function loadCharacterIntoEditor(index) {
     if (profileStatus) profileStatus.textContent =
         `Loaded character ${index + 1}.`;
 }
+
 /************************************************************
  *  APPLY PROFILE CHANGES
  ************************************************************/
@@ -338,6 +289,7 @@ function applyChangesToCurrentCharacter() {
     if (profileStatus) profileStatus.textContent =
         `Changes applied to character ${currentCharacterIndex + 1}.`;
 }
+
 /************************************************************
  *  APPLY BUTTON WIRING (PER TAB)
  ************************************************************/
@@ -345,51 +297,34 @@ document.getElementById("applyProfileBtn")
     .addEventListener("click", applyChangesToCurrentCharacter);
 
 document.getElementById("applyLoreBtn")
-    .addEventListener("click", saveGlobalLoreToPerchance);
+    .addEventListener("click", saveLoreToPerchance);
 
 document.getElementById("applyMemoryBtn")
     .addEventListener("click", () => {
         alert("Memory editing not implemented yet.");
     });
+
 /************************************************************
- *  GLOBAL LORE TAB — WORLD LORE + NUMERIC TEMPLATE
+ *  LORE TAB — CHARACTER LORE + NUMERIC WORLD TEMPLATE
  ************************************************************/
-function loadGlobalLoreIntoEditor() {
-    const tables = perchanceData?.data?.data;
-    if (!tables) {
-        document.getElementById("loreEditor").value = "";
-        return;
-    }
+function loadCharacterLoreIntoEditor() {
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) return;
 
-    const loreTable = tables.find(t => t.tableName === "lore");
-    if (!loreTable || !Array.isArray(loreTable.rows) || loreTable.rows.length === 0) {
-        document.getElementById("loreEditor").value = "";
-        return;
-    }
-
-    const loreRow = loreTable.rows[0];
-    const loreText = loreRow.text ?? "";
-
+    const loreText = row.lore ?? "";
     document.getElementById("loreEditor").value = loreText;
 }
 
-function saveGlobalLoreToPerchance() {
-    const tables = perchanceData?.data?.data;
-    if (!tables) {
-        alert("No export loaded.");
+function saveLoreToPerchance() {
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) {
+        alert("No character selected.");
         return;
     }
 
-    const loreTable = tables.find(t => t.tableName === "lore");
-    if (!loreTable || !Array.isArray(loreTable.rows) || loreTable.rows.length === 0) {
-        alert("Lore table not found.");
-        return;
-    }
+    row.lore = document.getElementById("loreEditor").value;
 
-    const loreRow = loreTable.rows[0];
-    loreRow.text = document.getElementById("loreEditor").value;
-
-    alert("Global lore saved.");
+    alert("Lore saved to character.");
 }
 
 document.getElementById("generateLoreTemplateBtn")
@@ -456,6 +391,7 @@ Notes
 
         document.getElementById("loreEditor").value = template;
     });
+
 /************************************************************
  *  EXPORT — GENERATE .json.gz
  ************************************************************/
@@ -534,12 +470,9 @@ if (processBtn) {
             populateCharacterDropdown();
 
             if (charactersRows.length > 0) {
-                currentCharacterIndex = 0;
                 loadCharacterIntoEditor(0);
+                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
             }
-
-            // Refresh global lore after scrub
-            loadGlobalLoreIntoEditor();
 
             document.getElementById("status").textContent = "Scrub complete.";
         } catch (err) {
@@ -552,4 +485,4 @@ if (processBtn) {
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Global Lore Mode) fully loaded.");
+console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
