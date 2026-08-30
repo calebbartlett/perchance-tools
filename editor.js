@@ -1,5 +1,5 @@
 /************************************************************
- *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
+ *  SmarHamr — EDITOR.JS (Aligned to Baseline HTML)
  ************************************************************/
 
 let perchanceData = null;
@@ -42,7 +42,6 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
 
         if (charactersRows.length > 0) {
             loadCharacterIntoEditor(0);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
 
     } catch (err) {
@@ -130,7 +129,6 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
     });
 }
@@ -291,106 +289,10 @@ function applyChangesToCurrentCharacter() {
 }
 
 /************************************************************
- *  APPLY BUTTON WIRING (PER TAB)
+ *  APPLY BUTTON (GLOBAL)
  ************************************************************/
-document.getElementById("applyProfileBtn")
+document.getElementById("applyChangesBtnTop")
     .addEventListener("click", applyChangesToCurrentCharacter);
-
-document.getElementById("applyLoreBtn")
-    .addEventListener("click", saveLoreToPerchance);
-
-document.getElementById("applyMemoryBtn")
-    .addEventListener("click", () => {
-        alert("Memory editing not implemented yet.");
-    });
-
-/************************************************************
- *  LORE TAB — CHARACTER LORE + NUMERIC WORLD TEMPLATE
- ************************************************************/
-function loadCharacterLoreIntoEditor() {
-    const row = charactersRows[currentCharacterIndex];
-    if (!row) return;
-
-    const loreText = row.lore ?? "";
-    document.getElementById("loreEditor").value = loreText;
-}
-
-function saveLoreToPerchance() {
-    const row = charactersRows[currentCharacterIndex];
-    if (!row) {
-        alert("No character selected.");
-        return;
-    }
-
-    row.lore = document.getElementById("loreEditor").value;
-
-    alert("Lore saved to character.");
-}
-
-document.getElementById("generateLoreTemplateBtn")
-    .addEventListener("click", () => {
-        const template = `
-World Metrics
--------------
-Magic Level: 3/10
-Tech Level: 7/10
-Cultural Pressure: 4/10
-Environmental Pressure: 5/10
-Supernatural Pressure: 2/10
-Stability Index: 6/10
-Threat Index: 3/10
-Discovery Index: 7/10
-
-World Overview
---------------
-A mostly stable, modern‑tech world with low‑level magic phenomena. Society is comfortable but curious, with rising interest in ancient mysteries and subtle supernatural events.
-
-Geography & Environment
------------------------
-• Climate mostly temperate with mild extremes.
-• Environmental Pressure (5/10): Occasional natural anomalies near ley‑current hotspots.
-• No catastrophic zones; exploration is safe but intriguing.
-
-Cultures & Societies
---------------------
-• Cultural Pressure (4/10): Minor tensions between tradition and innovation.
-• Most societies are cooperative, globally connected, and moderately progressive.
-• Subcultures exist around magic folklore and scientific exploration.
-
-Technology & Magic
-------------------
-• Tech Level (7/10): Comparable to early 21st‑century Earth with emerging advanced materials.
-• Magic Level (3/10): Rare, subtle, often mistaken for intuition or coincidence.
-• Magic is not systematized; no formal schools or institutions.
-
-Factions & Power Structures
----------------------------
-• Stability Index (6/10): Governments are functional, alliances mostly stable.
-• The Archive: Neutral researchers cataloging anomalies.
-• Meridian Council: Tech‑forward industrial alliance.
-• Solari Clans: Tradition‑focused nomadic groups.
-
-History & Timeline
-------------------
-• 800 years ago: The Shattering — collapse of ancient empires.
-• 200 years ago: Industrial rise.
-• 40 years ago: Rediscovery of ley currents.
-• Present: Growing interest in pre‑Shattering ruins.
-
-Current State of the World
---------------------------
-• Threat Index (3/10): Low — anomalies are strange but rarely dangerous.
-• Discovery Index (7/10): High — explorers uncover ruins, artifacts, and unexplained signals.
-• Public curiosity is rising; governments begin funding research.
-
-Notes
------
-• These numeric values give users a baseline to adjust.
-• Increase or decrease any metric to shift tone, danger, or complexity.
-`.trim();
-
-        document.getElementById("loreEditor").value = template;
-    });
 
 /************************************************************
  *  EXPORT — GENERATE .json.gz
@@ -471,7 +373,6 @@ if (processBtn) {
 
             if (charactersRows.length > 0) {
                 loadCharacterIntoEditor(0);
-                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
             }
 
             document.getElementById("status").textContent = "Scrub complete.";
@@ -485,4 +386,4 @@ if (processBtn) {
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
+console.log("SmarHamr editor.js (Aligned to Baseline HTML) fully loaded.");
