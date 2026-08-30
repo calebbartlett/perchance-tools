@@ -314,15 +314,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const activePanel = document.getElementById(tab);
       if (activePanel) activePanel.classList.add('active');
 
-      // ⭐ CRITICAL FIX: load character lore when switching to Lore tab
+      // load global lore when switching to Lore tab
       if (tab === "lore") {
-        loadCharacterLoreIntoEditor();
+        loadGlobalLoreIntoEditor();
       }
     });
   });
 });
-</script>
-
+  </script>
 
 </body>
 </html>
