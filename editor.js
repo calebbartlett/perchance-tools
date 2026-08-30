@@ -44,6 +44,9 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
             loadCharacterIntoEditor(0);
         }
 
+        // Load lore after import
+        loadCharacterLoreIntoEditor();
+
     } catch (err) {
         console.error("Error loading export:", err);
         document.getElementById("importStatus").textContent = "Error loading file";
@@ -129,6 +132,7 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
+            loadCharacterLoreIntoEditor();
         }
     });
 }
@@ -375,6 +379,8 @@ if (processBtn) {
                 loadCharacterIntoEditor(0);
             }
 
+            loadCharacterLoreIntoEditor();
+
             document.getElementById("status").textContent = "Scrub complete.";
         } catch (err) {
             console.error("Scrub error:", err);
@@ -384,6 +390,56 @@ if (processBtn) {
 }
 
 /************************************************************
+ *  LORE TAB — LOAD & SAVE FROM LORE TABLE
+ ************************************************************/
+function getLoreTable() {
+    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
+        return null;
+    }
+    return perchanceData.data.data.find(t => t.tableName === "lore");
+}
+
+function findLoreRow() {
+    const loreTable = getLoreTable();
+    if (!loreTable || !Array.isArray(loreTable.rows)) return null;
+
+    return loreTable.rows.find(r =>
+        typeof r.text === "string" &&
+        (r.text.includes("yggdrasil") || r.text.includes("118175"))
+    );
+}
+
+function loadCharacterLoreIntoEditor() {
+    const loreRow = findLoreRow();
+    const editor = document.getElementById("loreEditor");
+
+    if (!editor) return;
+
+    if (!loreRow) {
+        editor.value = "(no lore found in export)";
+        return;
+    }
+
+    editor.value = loreRow.text;
+}
+
+function saveLoreToPerchance() {
+    const loreRow = findLoreRow();
+    const editor = document.getElementById("loreEditor");
+
+    if (!loreRow || !editor) {
+        alert("Lore row not found.");
+        return;
+    }
+
+    loreRow.text = editor.value;
+    alert("Lore saved.");
+}
+
+document.getElementById("applyLoreBtn")
+    .addEventListener("click", saveLoreToPerchance);
+
+/************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Aligned to Baseline HTML) fully loaded.");
+console.log("SmarHamr editor.js (Aligned + Lore Table Integrated) fully loaded.");
