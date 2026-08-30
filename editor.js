@@ -1,5 +1,5 @@
 /************************************************************
- *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
+ *  SMarHamr — EDITOR.JS (Global Lore + Numeric Template)
  ************************************************************/
 
 let perchanceData = null;
@@ -41,9 +41,12 @@ document.getElementById("fileInput").addEventListener("change", async (event) =>
         populateCharacterDropdown();
 
         if (charactersRows.length > 0) {
+            currentCharacterIndex = 0;
             loadCharacterIntoEditor(0);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
         }
+
+        // load global lore once export is loaded
+        loadGlobalLoreIntoEditor();
 
     } catch (err) {
         console.error("Error loading export:", err);
@@ -130,7 +133,8 @@ function populateCharacterDropdown() {
         if (!isNaN(idx)) {
             currentCharacterIndex = idx;
             loadCharacterIntoEditor(idx);
-            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+            // lore is global, but we can refresh it when switching
+            loadGlobalLoreIntoEditor();
         }
     });
 }
@@ -305,26 +309,44 @@ document.getElementById("applyMemoryBtn")
     });
 
 /************************************************************
- *  LORE TAB — CHARACTER LORE + NUMERIC WORLD TEMPLATE
+ *  LORE TAB — GLOBAL LORE (Perchance-style)
  ************************************************************/
-function loadCharacterLoreIntoEditor() {
-    const row = charactersRows[currentCharacterIndex];
-    if (!row) return;
+function loadGlobalLoreIntoEditor() {
+    const tables = perchanceData?.data?.data;
+    if (!tables) {
+        document.getElementById("loreEditor").value = "";
+        return;
+    }
 
-    const loreText = row.lore ?? "";
+    const loreTable = tables.find(t => t.tableName === "lore");
+    if (!loreTable || !Array.isArray(loreTable.rows) || loreTable.rows.length === 0) {
+        document.getElementById("loreEditor").value = "";
+        return;
+    }
+
+    const loreRow = loreTable.rows[0];
+    const loreText = loreRow.text ?? "";
+
     document.getElementById("loreEditor").value = loreText;
 }
 
 function saveLoreToPerchance() {
-    const row = charactersRows[currentCharacterIndex];
-    if (!row) {
-        alert("No character selected.");
+    const tables = perchanceData?.data?.data;
+    if (!tables) {
+        alert("No export loaded.");
         return;
     }
 
-    row.lore = document.getElementById("loreEditor").value;
+    const loreTable = tables.find(t => t.tableName === "lore");
+    if (!loreTable || !Array.isArray(loreTable.rows) || loreTable.rows.length === 0) {
+        alert("Lore table not found.");
+        return;
+    }
 
-    alert("Lore saved to character.");
+    const loreRow = loreTable.rows[0];
+    loreRow.text = document.getElementById("loreEditor").value;
+
+    alert("Global lore saved.");
 }
 
 document.getElementById("generateLoreTemplateBtn")
@@ -470,11 +492,15 @@ if (processBtn) {
             populateCharacterDropdown();
 
             if (charactersRows.length > 0) {
+                currentCharacterIndex = 0;
                 loadCharacterIntoEditor(0);
-                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
             }
 
-            document.getElementById("status").textContent = "Scrub complete.";
+            // refresh global lore after scrub
+            loadGlobalLoreIntoEditor();
+
+            const statusEl = document.getElementById("status");
+            if (statusEl) statusEl.textContent = "Scrub complete.";
         } catch (err) {
             console.error("Scrub error:", err);
             alert("Scrub failed.");
@@ -485,4 +511,4 @@ if (processBtn) {
 /************************************************************
  *  END OF FILE
  ************************************************************/
-console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
+console.log("SmarHamr editor.js (Global Lore + Numeric Template) fully loaded.");
