@@ -1,145 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SmarHamr Perchance Editor</title>
+<meta charset="UTF-8">
+<title>SmarHamr Perchance Export Editor</title>
 
-  <style>
+<style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      max-width: 1100px;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
     }
 
-    h1 {
-      margin-bottom: 0.5rem;
+    /* 3-column grid shell */
+    .grid-shell {
+        display: grid;
+        grid-template-columns: 280px 1fr 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
     }
 
-    .top-bar {
-      margin-bottom: 1rem;
-    }
-
-    .top-bar button {
-      padding: 0.5rem 1rem;
-      margin-right: 0.5rem;
-      border: 1px solid #ccc;
-      background: #eee;
-      cursor: pointer;
+    /* Left sidebar */
+    .sidebar {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        background: #222;
+        color: #fff;
+        padding: 1rem;
     }
 
     /* Tabs */
-    #tabs {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        background: #ddd;
+        padding: 0.5rem;
     }
 
     .tab-button {
-      padding: 0.5rem 1rem;
-      margin-right: 0.5rem;
-      border: 1px solid #ccc;
-      background: #eee;
-      cursor: pointer;
+        padding: 0.5rem 1rem;
+        background: #bbb;
+        border: none;
+        cursor: pointer;
     }
 
     .tab-button.active {
-      background: #ddd;
-      font-weight: bold;
+        background: #fff;
+        border-bottom: 2px solid #000;
     }
 
+    /* Tab panels */
     .tab-panel {
-      display: none;
+        display: none;
+        padding: 1rem;
+        background: #fff;
+        overflow-y: auto;
     }
 
     .tab-panel.active {
-      display: block;
+        display: block;
     }
 
     .box {
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 6px;
-      background: #f9f9f9;
+        background: #eee;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        white-space: pre-wrap;
     }
 
-    textarea, input, select {
-      width: 100%;
-      margin-top: 0.3rem;
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
+    textarea {
+        width: 100%;
+        height: 300px;
     }
-  </style>
+
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+</style>
 </head>
-
 <body>
+<div class="grid-shell">
 
-  <h1>SmarHamr Perchance Editor</h1>
+    <div class="sidebar">
+        <h2>SmarHamr</h2>
 
-  <!-- ========================= -->
-  <!-- TOP BAR (GLOBAL ACTIONS) -->
-  <!-- ========================= -->
-  <div class="top-bar">
-    <input type="file" id="fileInput" accept=".json,.gz,.json.gz">
-    <button id="downloadUpdatedBtnTop">Download Updated Export</button>
-    <button id="scrubBtnTop">Scrub Export</button>
-    <span id="importStatus"></span>
-  </div>
+        <p><strong>Import Perchance Export</strong></p>
+        <input type="file" id="fileInput">
 
-  <!-- ========================= -->
-  <!-- TABS -->
-  <!-- ========================= -->
-  <div id="tabs">
-    <button class="tab-button active" data-tab="profiles">Profiles</button>
-    <button class="tab-button" data-tab="lore">Lore</button>
-    <button class="tab-button" data-tab="memory">Memory</button>
-    <button class="tab-button" data-tab="dexie">Dexie Viewer</button>
-  </div>
+        <p id="importStatus"></p>
 
-  <div id="tab-content">
+        <hr>
 
-    <!-- ========================= -->
-    <!-- PROFILES TAB -->
-    <!-- ========================= -->
-    <div id="profiles" class="tab-panel active">
-      <h2>Character Profiles</h2>
-      <p>Edit characters extracted from your Perchance export.</p>
+        <button id="downloadUpdatedBtnTop">Download Updated Export</button>
+        <button id="scrubBtnTop">Run Scrubber</button>
 
-      <label><strong>Select Character:</strong></label>
-      <select id="characterSelect">
-        <option value="">(none)</option>
-      </select>
+        <hr>
 
-      <!-- APPLY BUTTON FOR THIS TAB -->
-      <button id="applyProfileBtn" style="margin-top:1rem;">
-        Apply Profile Changes
-      </button>
+        <p><strong>Character Select</strong></p>
+        <select id="characterSelect"></select>
 
-      <div class="box">
-        <h3>Basic</h3>
+    </div>
+    <div class="tabs">
+        <button class="tab-button active" data-tab="profile">Profile</button>
+        <button class="tab-button" data-tab="lore">Lore</button>
+        <button class="tab-button" data-tab="memory">Memory</button>
+        <button class="tab-button" data-tab="dexie">Dexie Viewer</button>
+    </div>
+    <div id="profile" class="tab-panel active">
+        <h2>Character Profile</h2>
 
         <label>Name</label>
         <input type="text" id="charName">
 
         <label>Role Instructions</label>
-        <textarea id="charRoleInstructions" rows="3"></textarea>
+        <textarea id="charRoleInstructions"></textarea>
 
         <label>Reminder Message</label>
-        <textarea id="charReminder" rows="3"></textarea>
+        <textarea id="charReminder"></textarea>
 
         <label>General Writing Instructions</label>
-        <textarea id="charGeneralWriting" rows="3"></textarea>
+        <textarea id="charGeneralWriting"></textarea>
 
         <label>Greeting</label>
-        <textarea id="charGreeting" rows="3"></textarea>
-      </div>
+        <textarea id="charGreeting"></textarea>
 
-      <div class="box">
-        <h3>Advanced — Message & Prompts</h3>
+        <hr>
 
         <label>Message Wrapper Style</label>
-        <textarea id="charMessageWrapperStyle" rows="2"></textarea>
+        <input type="text" id="charMessageWrapperStyle">
 
         <label>Image Prompt Prefix</label>
         <input type="text" id="charImagePromptPrefix">
@@ -148,20 +137,18 @@
         <input type="text" id="charImagePromptSuffix">
 
         <label>Image Prompt Triggers</label>
-        <textarea id="charImagePromptTriggers" rows="2"></textarea>
+        <input type="text" id="charImagePromptTriggers">
 
         <label>Message Input Placeholder</label>
         <input type="text" id="charMessageInputPlaceholder">
-      </div>
 
-      <div class="box">
-        <h3>Advanced — Model & Tokens</h3>
+        <hr>
 
         <label>Model Name</label>
         <input type="text" id="charModelName">
 
         <label>Temperature</label>
-        <input type="number" id="charTemperature" step="0.01">
+        <input type="number" id="charTemperature">
 
         <label>Max Tokens Per Message</label>
         <input type="number" id="charMaxTokensPerMessage">
@@ -174,10 +161,8 @@
 
         <label>Auto Generate Memories</label>
         <input type="text" id="charAutoGenerateMemories">
-      </div>
 
-      <div class="box">
-        <h3>Advanced — Avatar & Scene</h3>
+        <hr>
 
         <label>Avatar URL</label>
         <input type="text" id="charAvatarUrl">
@@ -193,144 +178,61 @@
 
         <label>Scene Music URL</label>
         <input type="text" id="charSceneMusicUrl">
-      </div>
 
-      <div class="box">
-        <h3>Advanced — Meta & Flags</h3>
+        <hr>
 
         <label>Meta Title</label>
         <input type="text" id="charMetaTitle">
 
         <label>Meta Description</label>
-        <textarea id="charMetaDescription" rows="2"></textarea>
+        <input type="text" id="charMetaDescription">
 
         <label>Meta Image</label>
         <input type="text" id="charMetaImage">
 
         <label>Streaming Response</label>
-        <select id="charStreamingResponse">
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
+        <input type="text" id="charStreamingResponse">
 
         <label>Folder Path</label>
         <input type="text" id="charFolderPath">
-      </div>
 
-      <p id="profileStatus"></p>
+        <button id="applyProfileBtn">Apply Profile Changes</button>
+
+        <p id="profileStatus"></p>
     </div>
-
-    <!-- ========================= -->
-    <!-- LORE TAB -->
-    <!-- ========================= -->
     <div id="lore" class="tab-panel">
-      <h2>Lore Editor</h2>
-      <p>Create or edit world lore stored in your Perchance export.</p>
+        <h2>Global Lore</h2>
 
-      <!-- APPLY BUTTON FOR THIS TAB -->
-      <button id="applyLoreBtn" style="margin-bottom:1rem;">
-        Apply Lore Changes
-      </button>
+        <textarea id="loreEditor"></textarea>
 
-      <!-- TEMPLATE GENERATOR -->
-      <button id="generateLoreTemplateBtn" style="margin-bottom:1rem;">
-        Generate World Template
-      </button>
-
-      <!-- MAIN LORE TEXT AREA -->
-      <textarea id="loreEditor" rows="20" style="margin-top:1rem;"></textarea>
+        <button id="applyLoreBtn">Save Lore</button>
+        <button id="generateLoreTemplateBtn">Insert World Template</button>
     </div>
-
-    <!-- ========================= -->
-    <!-- MEMORY TAB (placeholder) -->
-    <!-- ========================= -->
     <div id="memory" class="tab-panel">
-      <h2>Memory Editor</h2>
-      <p>This section will allow editing Perchance memory rows once implemented.</p>
-
-      <!-- APPLY BUTTON FOR THIS TAB -->
-      <button id="applyMemoryBtn" style="margin-bottom:1rem;">
-        Apply Memory Changes
-      </button>
-
-      <div class="box">
-        <p><strong>Memory editing is not yet implemented.</strong></p>
-        <p>This placeholder will later support:</p>
-        <ul>
-          <li>Viewing memory rows</li>
-          <li>Editing memory content</li>
-          <li>Adding new memory entries</li>
-          <li>Deleting memory entries</li>
-        </ul>
-      </div>
+        <h2>Memory</h2>
+        <p>Memory editing not implemented yet.</p>
+        <button id="applyMemoryBtn">Apply Memory Changes</button>
     </div>
+    <div id="dexie" class="tab-panel">
+        <h2>Dexie Viewer</h2>
 
-    <!-- ========================= -->
-<!-- DEXIE VIEWER TAB -->
-<!-- ========================= -->
-<div id="dexie" class="tab-panel">
-  <h2>Dexie Viewer</h2>
-  <p>View raw or pretty JSON from your Perchance export.</p>
+        <button id="showRawBtn">Show Raw JSON</button>
+        <button id="showPrettyBtn">Show Pretty JSON</button>
+        <button id="downloadPrettyBtn">Download Pretty JSON</button>
+        <button id="downloadRawBtn">Download Raw JSON</button>
 
-  <div style="margin-bottom:1rem;">
-    <button id="showRawBtn">Show Raw JSON</button>
-    <button id="showPrettyBtn">Show Pretty JSON</button>
-    <button id="downloadPrettyBtn">Download Pretty JSON</button>
-    <button id="downloadRawBtn">Download Raw JSON</button>
-  </div>
+        <hr>
 
-  <!-- SEARCH BOX -->
-  <div style="margin-bottom:1rem;">
-    <input type="text" id="jsonSearchBox" placeholder="Search JSON...">
-    <button id="jsonSearchBtn">Find</button>
-    <span id="jsonSearchStatus"></span>
-  </div>
+        <input type="text" id="jsonSearchBox" placeholder="Search JSON...">
+        <button id="jsonSearchBtn">Find</button>
+        <span id="jsonSearchStatus"></span>
 
-  <pre id="jsonViewer" class="box" style="white-space:pre-wrap; margin-top:1rem;"></pre>
-</div>
+        <pre id="jsonViewer" class="box"></pre>
+    </div>
+<script src="pako.min.js"></script>
+<script src="scrubber.js"></script>
+<script src="editor.js"></script>
 
-
-
-  <!-- ========================= -->
-  <!-- SCRIPT INCLUDES -->
-  <!-- ========================= -->
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-  <script src="scrubber.js"></script>
-  <script src="editor.js"></script>
-
-  <!-- ========================= -->
-  <!-- TAB SWITCHING LOGIC -->
-  <!-- ========================= -->
-  <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const buttons = document.querySelectorAll('.tab-button');
-  const panels = document.querySelectorAll('.tab-panel');
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-
-      // deactivate all buttons
-      buttons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const tab = btn.dataset.tab;
-
-      // hide all panels
-      panels.forEach(panel => panel.classList.remove('active'));
-
-      // show selected panel
-      const activePanel = document.getElementById(tab);
-      if (activePanel) activePanel.classList.add('active');
-
-      // ⭐ CRITICAL FIX: load character lore when switching to Lore tab
-      if (tab === "lore") {
-        loadCharacterLoreIntoEditor();
-      }
-    });
-  });
-});
-</script>
-
-
+</div> <!-- end grid-shell -->
 </body>
 </html>
