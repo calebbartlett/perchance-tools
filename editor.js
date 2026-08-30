@@ -1,274 +1,488 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>SmarHamr Perchance Export Editor</title>
+/************************************************************
+ *  SMarHamr — EDITOR.JS (Character-Lore + Numeric Template)
+ ************************************************************/
 
-<style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f5f5f5;
+let perchanceData = null;
+let rawJsonText = "";
+let prettyJsonText = "";
+let prettyJsonLines = [];
+
+let charactersRows = [];
+let currentCharacterIndex = 0;
+
+/************************************************************
+ *  IMPORT HANDLER — LOAD .json OR .json.gz
+ ************************************************************/
+document.getElementById("fileInput").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+        const isGzip = file.name.endsWith(".gz");
+        let decompressed;
+
+        if (isGzip) {
+            const arrayBuffer = await file.arrayBuffer();
+            decompressed = pako.ungzip(arrayBuffer, { to: "string" });
+        } else {
+            decompressed = await file.text();
+        }
+
+        rawJsonText = decompressed;
+        perchanceData = JSON.parse(decompressed);
+
+        prettyJsonText = JSON.stringify(perchanceData, null, 2);
+        prettyJsonLines = prettyJsonText.split("\n");
+
+        document.getElementById("importStatus").textContent = "File loaded";
+        document.getElementById("jsonViewer").textContent = rawJsonText;
+
+        extractCharactersFromDexie();
+        populateCharacterDropdown();
+
+        if (charactersRows.length > 0) {
+            loadCharacterIntoEditor(0);
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+        }
+
+    } catch (err) {
+        console.error("Error loading export:", err);
+        document.getElementById("importStatus").textContent = "Error loading file";
     }
-
-    .grid-shell {
-        display: grid;
-        grid-template-columns: 280px 1fr 1fr;
-        grid-template-rows: auto 1fr;
-        height: 100vh;
-    }
-
-    .sidebar {
-        grid-column: 1;
-        grid-row: 1 / span 2;
-        background: #222;
-        color: #fff;
-        padding: 1rem;
-    }
-
-    .tabs {
-        grid-column: 2 / span 2;
-        background: #ddd;
-        padding: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .tab-button {
-        padding: 0.5rem 1rem;
-        background: #bbb;
-        border: none;
-        cursor: pointer;
-    }
-
-    .tab-button.active {
-        background: #fff;
-        border-bottom: 2px solid #000;
-    }
-
-    .tab-panel {
-        grid-column: 2 / span 2;
-        display: none;
-        padding: 1rem;
-        background: #fff;
-        overflow-y: auto;
-    }
-
-    .tab-panel.active {
-        display: block;
-    }
-
-    .box {
-        background: #eee;
-        padding: 1rem;
-        border: 1px solid #ccc;
-        white-space: pre-wrap;
-    }
-
-    textarea {
-        width: 100%;
-        height: 300px;
-    }
-
-    input[type="text"], input[type="number"] {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-</style>
-</head>
-<body>
-
-<div class="grid-shell">
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <h2>SmarHamr</h2>
-
-        <p><strong>Import Perchance Export</strong></p>
-        <input type="file" id="fileInput">
-        <p id="importStatus"></p>
-
-        <hr>
-
-        <button id="downloadUpdatedBtnTop">Download Updated Export</button>
-        <button id="scrubBtnTop">Run Scrubber</button>
-
-        <hr>
-
-        <p><strong>Character Select</strong></p>
-        <select id="characterSelect"></select>
-    </div>
-
-    <!-- TABS -->
-    <div class="tabs">
-        <button class="tab-button active" data-tab="profile">Profile</button>
-        <button class="tab-button" data-tab="lore">Lore</button>
-        <button class="tab-button" data-tab="memory">Memory</button>
-        <button class="tab-button" data-tab="dexie">Dexie Viewer</button>
-    </div>
-
-    <!-- PROFILE TAB -->
-    <div id="profile" class="tab-panel active">
-        <h2>Character Profile</h2>
-
-        <label>Name</label>
-        <input type="text" id="charName">
-
-        <label>Role Instructions</label>
-        <textarea id="charRoleInstructions"></textarea>
-
-        <label>Reminder Message</label>
-        <textarea id="charReminder"></textarea>
-
-        <label>General Writing Instructions</label>
-        <textarea id="charGeneralWriting"></textarea>
-
-        <label>Greeting</label>
-        <textarea id="charGreeting"></textarea>
-
-        <hr>
-
-        <label>Message Wrapper Style</label>
-        <input type="text" id="charMessageWrapperStyle">
-
-        <label>Image Prompt Prefix</label>
-        <input type="text" id="charImagePromptPrefix">
-
-        <label>Image Prompt Suffix</label>
-        <input type="text" id="charImagePromptSuffix">
-
-        <label>Image Prompt Triggers</label>
-        <input type="text" id="charImagePromptTriggers">
-
-        <label>Message Input Placeholder</label>
-        <input type="text" id="charMessageInputPlaceholder">
-
-        <hr>
-
-        <label>Model Name</label>
-        <input type="text" id="charModelName">
-
-        <label>Temperature</label>
-        <input type="number" id="charTemperature">
-
-        <label>Max Tokens Per Message</label>
-        <input type="number" id="charMaxTokensPerMessage">
-
-        <label>Text Embedding Model Name</label>
-        <input type="text" id="charTextEmbeddingModelName">
-
-        <label>Fit Messages Method</label>
-        <input type="text" id="charFitMessagesMethod">
-
-        <label>Auto Generate Memories</label>
-        <input type="text" id="charAutoGenerateMemories">
-
-        <hr>
-
-        <label>Avatar URL</label>
-        <input type="text" id="charAvatarUrl">
-
-        <label>Avatar Size</label>
-        <input type="number" id="charAvatarSize">
-
-        <label>Avatar Shape</label>
-        <input type="text" id="charAvatarShape">
-
-        <label>Scene Background URL</label>
-        <input type="text" id="charSceneBackgroundUrl">
-
-        <label>Scene Music URL</label>
-        <input type="text" id="charSceneMusicUrl">
-
-        <hr>
-
-        <label>Meta Title</label>
-        <input type="text" id="charMetaTitle">
-
-        <label>Meta Description</label>
-        <input type="text" id="charMetaDescription">
-
-        <label>Meta Image</label>
-        <input type="text" id="charMetaImage">
-
-        <label>Streaming Response</label>
-        <input type="text" id="charStreamingResponse">
-
-        <label>Folder Path</label>
-        <input type="text" id="charFolderPath">
-
-        <button id="applyProfileBtn">Apply Profile Changes</button>
-
-        <p id="profileStatus"></p>
-    </div>
-
-    <!-- LORE TAB -->
-    <div id="lore" class="tab-panel">
-        <h2>Global Lore</h2>
-
-        <textarea id="loreEditor"></textarea>
-
-        <button id="applyLoreBtn">Save Lore</button>
-        <button id="generateLoreTemplateBtn">Insert World Template</button>
-    </div>
-
-    <!-- MEMORY TAB -->
-    <div id="memory" class="tab-panel">
-        <h2>Memory</h2>
-        <p>Memory editing not implemented yet.</p>
-        <button id="applyMemoryBtn">Apply Memory Changes</button>
-    </div>
-
-    <!-- DEXIE VIEWER TAB -->
-    <div id="dexie" class="tab-panel">
-        <h2>Dexie Viewer</h2>
-
-        <button id="showRawBtn">Show Raw JSON</button>
-        <button id="showPrettyBtn">Show Pretty JSON</button>
-        <button id="downloadPrettyBtn">Download Pretty JSON</button>
-        <button id="downloadRawBtn">Download Raw JSON</button>
-
-        <hr>
-
-        <input type="text" id="jsonSearchBox" placeholder="Search JSON...">
-        <button id="jsonSearchBtn">Find</button>
-        <span id="jsonSearchStatus"></span>
-
-        <pre id="jsonViewer" class="box"></pre>
-    </div>
-
-</div> <!-- end grid-shell -->
-
-<!-- SCRIPTS -->
-<script src="pako.min.js"></script>
-<script src="scrubber.js"></script>
-<script src="editor.js"></script>
-
-<!-- TAB SWITCHING -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const buttons = document.querySelectorAll('.tab-button');
-    const panels = document.querySelectorAll('.tab-panel');
-
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-
-            buttons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const tab = btn.dataset.tab;
-
-            panels.forEach(panel => panel.classList.remove('active'));
-            const activePanel = document.getElementById(tab);
-            if (activePanel) activePanel.classList.add('active');
-
-            if (tab === "lore") {
-                loadGlobalLoreIntoEditor();
-            }
-        });
-    });
 });
-</script>
 
-</body>
-</html>
+/************************************************************
+ *  JSON VIEWER BUTTONS
+ ************************************************************/
+document.getElementById("showRawBtn").addEventListener("click", () => {
+    document.getElementById("jsonViewer").textContent =
+        rawJsonText || "(no JSON loaded yet)";
+});
+
+document.getElementById("showPrettyBtn").addEventListener("click", () => {
+    if (!prettyJsonLines.length) {
+        document.getElementById("jsonViewer").textContent = "(no JSON loaded yet)";
+        return;
+    }
+    const first500 = prettyJsonLines.slice(0, 500).join("\n");
+    document.getElementById("jsonViewer").textContent = first500;
+});
+
+document.getElementById("downloadPrettyBtn").addEventListener("click", () => {
+    if (!prettyJsonText) return;
+    const blob = new Blob([prettyJsonText], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pretty-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+/************************************************************
+ *  CHARACTER EXTRACTION
+ ************************************************************/
+function extractCharactersFromDexie() {
+    charactersRows = [];
+
+    if (!perchanceData || !perchanceData.data || !Array.isArray(perchanceData.data.data)) {
+        console.warn("Dexie structure not found.");
+        return;
+    }
+
+    const tablesDump = perchanceData.data.data;
+    const charactersTable = tablesDump.find(t => t.tableName === "characters");
+
+    if (!charactersTable || !Array.isArray(charactersTable.rows)) {
+        console.warn("No 'characters' table found.");
+        return;
+    }
+
+    charactersRows = charactersTable.rows;
+}
+
+/************************************************************
+ *  POPULATE CHARACTER DROPDOWN
+ ************************************************************/
+function populateCharacterDropdown() {
+    const select = document.getElementById("characterSelect");
+    if (!select) return;
+    select.innerHTML = "";
+
+    if (charactersRows.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "(no characters found)";
+        select.appendChild(opt);
+        return;
+    }
+
+    charactersRows.forEach((row, index) => {
+        const name = row.name || `Character ${index + 1}`;
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+
+    select.addEventListener("change", () => {
+        const idx = parseInt(select.value, 10);
+        if (!isNaN(idx)) {
+            currentCharacterIndex = idx;
+            loadCharacterIntoEditor(idx);
+            loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+        }
+    });
+}
+
+/************************************************************
+ *  LOAD CHARACTER INTO EDITOR
+ ************************************************************/
+function loadCharacterIntoEditor(index) {
+    const row = charactersRows[index];
+    if (!row) return;
+
+    const setVal = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.value = v ?? "";
+    };
+
+    // BASIC
+    setVal("charName", row.name || "");
+    setVal("charRoleInstructions", row.roleInstruction || "");
+    setVal("charReminder", row.reminderMessage || "");
+    setVal("charGeneralWriting", row.generalWritingInstructions || "");
+
+    let greeting = "";
+    if (Array.isArray(row.initialMessages) && row.initialMessages.length > 0) {
+        const first = row.initialMessages[0];
+        if (first && typeof first.content === "string") {
+            greeting = first.content;
+        }
+    }
+    setVal("charGreeting", greeting);
+
+    // MESSAGE & PROMPTS
+    setVal("charMessageWrapperStyle", row.messageWrapperStyle || "");
+    setVal("charImagePromptPrefix", row.imagePromptPrefix || "");
+    setVal("charImagePromptSuffix", row.imagePromptSuffix || "");
+    setVal("charImagePromptTriggers", row.imagePromptTriggers || "");
+    setVal("charMessageInputPlaceholder", row.messageInputPlaceholder || "");
+
+    // MODEL & TOKENS
+    setVal("charModelName", row.modelName || "");
+    setVal("charTemperature", row.temperature ?? "");
+    setVal("charMaxTokensPerMessage", row.maxTokensPerMessage ?? "");
+    setVal("charTextEmbeddingModelName", row.textEmbeddingModelName || "");
+    setVal("charFitMessagesMethod", row.fitMessagesInContextMethod || "");
+    setVal("charAutoGenerateMemories", row.autoGenerateMemories || "");
+
+    // AVATAR & SCENE
+    if (!row.avatar) row.avatar = {};
+    setVal("charAvatarUrl", row.avatar.url || "");
+    setVal("charAvatarSize", row.avatar.size ?? "");
+    setVal("charAvatarShape", row.avatar.shape || "");
+
+    if (!row.scene) row.scene = {};
+    if (!row.scene.background) row.scene.background = {};
+    if (!row.scene.music) row.scene.music = {};
+
+    setVal("charSceneBackgroundUrl", row.scene.background.url || "");
+    setVal("charSceneMusicUrl", row.scene.music.url || "");
+
+    // META & FLAGS
+    setVal("charMetaTitle", row.metaTitle || "");
+    setVal("charMetaDescription", row.metaDescription || "");
+    setVal("charMetaImage", row.metaImage || "");
+
+    const streaming = row.streamingResponse;
+    const streamingEl = document.getElementById("charStreamingResponse");
+    if (streamingEl) streamingEl.value = (streaming === false ? "false" : "true");
+
+    setVal("charFolderPath", row.folderPath || "");
+
+    const profileStatus = document.getElementById("profileStatus");
+    if (profileStatus) profileStatus.textContent =
+        `Loaded character ${index + 1}.`;
+}
+
+/************************************************************
+ *  APPLY PROFILE CHANGES
+ ************************************************************/
+function applyChangesToCurrentCharacter() {
+    if (!perchanceData || charactersRows.length === 0) {
+        alert("No export or characters loaded.");
+        return;
+    }
+
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) {
+        alert("Selected character not found.");
+        return;
+    }
+
+    // BASIC
+    row.name = document.getElementById("charName").value;
+    row.roleInstruction = document.getElementById("charRoleInstructions").value;
+    row.reminderMessage = document.getElementById("charReminder").value;
+    row.generalWritingInstructions = document.getElementById("charGeneralWriting").value;
+
+    const greeting = document.getElementById("charGreeting").value;
+    if (!Array.isArray(row.initialMessages)) {
+        row.initialMessages = [];
+    }
+    if (!row.initialMessages[0]) {
+        row.initialMessages[0] = { role: "assistant", content: "" };
+    }
+    row.initialMessages[0].content = greeting;
+
+    // MESSAGE & PROMPTS
+    row.messageWrapperStyle = document.getElementById("charMessageWrapperStyle").value;
+    row.imagePromptPrefix = document.getElementById("charImagePromptPrefix").value;
+    row.imagePromptSuffix = document.getElementById("charImagePromptSuffix").value;
+    row.imagePromptTriggers = document.getElementById("charImagePromptTriggers").value;
+    row.messageInputPlaceholder = document.getElementById("charMessageInputPlaceholder").value;
+
+    // MODEL & TOKENS
+    row.modelName = document.getElementById("charModelName").value;
+
+    const tempVal = document.getElementById("charTemperature").value;
+    if (tempVal !== "") row.temperature = parseFloat(tempVal);
+    else delete row.temperature;
+
+    const maxTokensVal = document.getElementById("charMaxTokensPerMessage").value;
+    if (maxTokensVal !== "") row.maxTokensPerMessage = parseInt(maxTokensVal, 10);
+    else delete row.maxTokensPerMessage;
+
+    row.textEmbeddingModelName = document.getElementById("charTextEmbeddingModelName").value;
+    row.fitMessagesInContextMethod = document.getElementById("charFitMessagesMethod").value;
+    row.autoGenerateMemories = document.getElementById("charAutoGenerateMemories").value;
+
+    // AVATAR & SCENE
+    if (!row.avatar) row.avatar = {};
+    row.avatar.url = document.getElementById("charAvatarUrl").value;
+
+    const avatarSizeVal = document.getElementById("charAvatarSize").value;
+    if (avatarSizeVal !== "") row.avatar.size = parseInt(avatarSizeVal, 10);
+    else delete row.avatar.size;
+
+    row.avatar.shape = document.getElementById("charAvatarShape").value;
+
+    if (!row.scene) row.scene = {};
+    if (!row.scene.background) row.scene.background = {};
+    if (!row.scene.music) row.scene.music = {};
+
+    row.scene.background.url = document.getElementById("charSceneBackgroundUrl").value;
+    row.scene.music.url = document.getElementById("charSceneMusicUrl").value;
+
+    // META & FLAGS
+    row.metaTitle = document.getElementById("charMetaTitle").value;
+    row.metaDescription = document.getElementById("charMetaDescription").value;
+    row.metaImage = document.getElementById("charMetaImage").value;
+
+    const streamingValue = document.getElementById("charStreamingResponse").value;
+    row.streamingResponse = (streamingValue === "false") ? false : true;
+
+    row.folderPath = document.getElementById("charFolderPath").value;
+
+    const profileStatus = document.getElementById("profileStatus");
+    if (profileStatus) profileStatus.textContent =
+        `Changes applied to character ${currentCharacterIndex + 1}.`;
+}
+
+/************************************************************
+ *  APPLY BUTTON WIRING (PER TAB)
+ ************************************************************/
+document.getElementById("applyProfileBtn")
+    .addEventListener("click", applyChangesToCurrentCharacter);
+
+document.getElementById("applyLoreBtn")
+    .addEventListener("click", saveLoreToPerchance);
+
+document.getElementById("applyMemoryBtn")
+    .addEventListener("click", () => {
+        alert("Memory editing not implemented yet.");
+    });
+
+/************************************************************
+ *  LORE TAB — CHARACTER LORE + NUMERIC WORLD TEMPLATE
+ ************************************************************/
+function loadCharacterLoreIntoEditor() {
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) return;
+
+    const loreText = row.lore ?? "";
+    document.getElementById("loreEditor").value = loreText;
+}
+
+function saveLoreToPerchance() {
+    const row = charactersRows[currentCharacterIndex];
+    if (!row) {
+        alert("No character selected.");
+        return;
+    }
+
+    row.lore = document.getElementById("loreEditor").value;
+
+    alert("Lore saved to character.");
+}
+
+document.getElementById("generateLoreTemplateBtn")
+    .addEventListener("click", () => {
+        const template = `
+World Metrics
+-------------
+Magic Level: 3/10
+Tech Level: 7/10
+Cultural Pressure: 4/10
+Environmental Pressure: 5/10
+Supernatural Pressure: 2/10
+Stability Index: 6/10
+Threat Index: 3/10
+Discovery Index: 7/10
+
+World Overview
+--------------
+A mostly stable, modern‑tech world with low‑level magic phenomena. Society is comfortable but curious, with rising interest in ancient mysteries and subtle supernatural events.
+
+Geography & Environment
+-----------------------
+• Climate mostly temperate with mild extremes.
+• Environmental Pressure (5/10): Occasional natural anomalies near ley‑current hotspots.
+• No catastrophic zones; exploration is safe but intriguing.
+
+Cultures & Societies
+--------------------
+• Cultural Pressure (4/10): Minor tensions between tradition and innovation.
+• Most societies are cooperative, globally connected, and moderately progressive.
+• Subcultures exist around magic folklore and scientific exploration.
+
+Technology & Magic
+------------------
+• Tech Level (7/10): Comparable to early 21st‑century Earth with emerging advanced materials.
+• Magic Level (3/10): Rare, subtle, often mistaken for intuition or coincidence.
+• Magic is not systematized; no formal schools or institutions.
+
+Factions & Power Structures
+---------------------------
+• Stability Index (6/10): Governments are functional, alliances mostly stable.
+• The Archive: Neutral researchers cataloging anomalies.
+• Meridian Council: Tech‑forward industrial alliance.
+• Solari Clans: Tradition‑focused nomadic groups.
+
+History & Timeline
+------------------
+• 800 years ago: The Shattering — collapse of ancient empires.
+• 200 years ago: Industrial rise.
+• 40 years ago: Rediscovery of ley currents.
+• Present: Growing interest in pre‑Shattering ruins.
+
+Current State of the World
+--------------------------
+• Threat Index (3/10): Low — anomalies are strange but rarely dangerous.
+• Discovery Index (7/10): High — explorers uncover ruins, artifacts, and unexplained signals.
+• Public curiosity is rising; governments begin funding research.
+
+Notes
+-----
+• These numeric values give users a baseline to adjust.
+• Increase or decrease any metric to shift tone, danger, or complexity.
+`.trim();
+
+        document.getElementById("loreEditor").value = template;
+    });
+
+/************************************************************
+ *  EXPORT — GENERATE .json.gz
+ ************************************************************/
+function downloadUpdatedExport() {
+    if (!perchanceData) {
+        alert("No export loaded.");
+        return;
+    }
+
+    try {
+        const now = new Date();
+        const timestamp =
+            now.getFullYear().toString() +
+            String(now.getMonth() + 1).padStart(2, "0") +
+            String(now.getDate()).padStart(2, "0") +
+            String(now.getHours()).padStart(2, "0") +
+            String(now.getMinutes()).padStart(2, "0");
+
+        if (!perchanceData.meta) perchanceData.meta = {};
+        perchanceData.meta.exportTimestamp = timestamp;
+
+        const filename = `export_${timestamp}.json.gz`;
+
+        const jsonString = JSON.stringify(perchanceData);
+        const gzipped = pako.gzip(jsonString);
+
+        const blob = new Blob([gzipped], { type: "application/gzip" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        document.getElementById("importStatus").textContent = "Export complete.";
+    } catch (err) {
+        console.error("Error generating updated export:", err);
+        alert("Error generating updated export.");
+    }
+}
+
+/************************************************************
+ *  CONNECT EXPORT & SCRUB BUTTONS
+ ************************************************************/
+document.getElementById("downloadUpdatedBtnTop")
+    .addEventListener("click", downloadUpdatedExport);
+
+document.getElementById("scrubBtnTop")
+    .addEventListener("click", () => {
+        const btn = document.getElementById("processBtn");
+        if (btn) btn.click();
+    });
+
+/************************************************************
+ *  SCRUBBER INTEGRATION
+ ************************************************************/
+const processBtn = document.getElementById("processBtn");
+if (processBtn) {
+    processBtn.addEventListener("click", () => {
+        if (!rawJsonText) {
+            alert("No file loaded.");
+            return;
+        }
+
+        try {
+            const result = scrubExport(rawJsonText);
+
+            document.getElementById("jsonViewer").textContent = result.cleanedJson;
+
+            perchanceData = JSON.parse(result.cleanedJson);
+            rawJsonText = result.cleanedJson;
+
+            extractCharactersFromDexie();
+            populateCharacterDropdown();
+
+            if (charactersRows.length > 0) {
+                loadCharacterIntoEditor(0);
+                loadCharacterLoreIntoEditor();   // <-- IMPORTANT
+            }
+
+            document.getElementById("status").textContent = "Scrub complete.";
+        } catch (err) {
+            console.error("Scrub error:", err);
+            alert("Scrub failed.");
+        }
+    });
+}
+
+/************************************************************
+ *  END OF FILE
+ ************************************************************/
+console.log("SmarHamr editor.js (Character-Lore + Numeric Template) fully loaded.");
